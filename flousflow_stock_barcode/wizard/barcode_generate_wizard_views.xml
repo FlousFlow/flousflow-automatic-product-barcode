@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="auto_barcode_generate_wizard_form" model="ir.ui.view">
+        <field name="name">auto.barcode.generate.wizard.form</field>
+        <field name="model">auto.barcode.generate.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Product Barcodes">
+                <group>
+                    <group>
+                        <field name="company_id"/>
+                        <field name="include_archived"/>
+                        <field name="existing_barcode_policy"/>
+                    </group>
+                    <group>
+                        <field name="missing_count"/>
+                    </group>
+                </group>
+                <footer>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    <button string="Generate Barcodes" name="action_generate"
+                            type="object" class="btn-primary"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

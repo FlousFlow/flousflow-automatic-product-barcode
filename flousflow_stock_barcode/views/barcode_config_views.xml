@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_auto_barcode_config_tree" model="ir.ui.view">
+        <field name="name">auto.barcode.config.tree</field>
+        <field name="model">auto.barcode.config</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="company_id"/>
+                <field name="enabled"/>
+                <field name="barcode_format"/>
+                <field name="prefix"/>
+                <field name="sequence_digits"/>
+                <field name="starting_number"/>
+                <field name="preview"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_auto_barcode_config_form" model="ir.ui.view">
+        <field name="name">auto.barcode.config.form</field>
+        <field name="model">auto.barcode.config</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="company_id"/>
+                            <field name="enabled"/>
+                            <field name="barcode_format"/>
+                            <field name="prefix"/>
+                        </group>
+                        <group>
+                            <field name="sequence_digits"/>
+                            <field name="starting_number"/>
+                            <field name="include_archived"/>
+                            <field name="existing_barcode_policy"/>
+                            <field name="preview"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

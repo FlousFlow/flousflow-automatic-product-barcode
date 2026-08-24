@@ -1,0 +1,117 @@
+Flous Flow Stock Barcode
+========================
+
+Automatically generate unique barcodes for products and variants.
+
+| | |
+|---|---|
+| **Version** | 19.0.1.0.0 |
+| **License** | LGPL-3 |
+| **Dependencies** | `product` |
+| **Compatibility** | Odoo 19 Community & Enterprise, self-hosted, Odoo.sh |
+
+Overview
+--------
+
+This module assigns a unique barcode to every new ``product.product`` variant
+whose ``barcode`` field is empty, using the native Odoo ``ir.sequence`` for
+concurrency-safe numbering. Administrators can also fill barcodes on existing
+products retroactively, either through the Settings wizard or through a
+contextual action on the Product Variants list.
+
+Key features
+------------
+
+* Automatic barcode generation on product variant creation.
+* Retroactive generation for existing products (wizard + contextual action).
+* Configurable barcode format: Sequential Numeric, Prefix + Sequential Numeric,
+  or EAN-13 with a valid checksum.
+* Multi-company support with independent, concurrency-safe ``ir.sequence``
+  per company.
+* Collision protection: generated values are checked before assignment.
+* Existing barcodes are always preserved (never overwritten).
+* Archived products handling.
+* EAN-13 check digit computed with the standard algorithm.
+
+Configuration
+-------------
+
+Open *Settings -> Automatic Product Barcodes*:
+
+* **Enable Automatic Barcode Generation** — turn the feature on or off.
+* **Barcode Format** — Sequential Numeric, Prefix + Sequential Numeric, or EAN-13.
+* **Prefix** — optional prefix prepended to the generated number.
+* **Sequence Digits** — length of the sequential part.
+* **Starting Number** — first number to generate.
+* **Barcode Preview** — live preview of the next value.
+* **Existing Barcode Policy** — always "Keep Existing Barcodes".
+* **Include Archived Products** — whether retroactive generation includes archived variants.
+
+Each company has its own configuration and its own independent sequence.
+
+EAN-13
+~~~~~~
+
+* The check digit is computed according to the EAN-13 algorithm.
+* The prefix length plus the sequence length must equal 12 digits (a 13th
+  check digit is appended). An invalid combination raises a
+  ``ValidationError`` instead of silently truncating.
+* Generated EAN-13 numbers are internal identifiers unless the company owns an
+  appropriate GS1 prefix.
+
+Automatic generation
+--------------------
+
+When enabled, a new ``product.product`` variant receives a barcode only if its
+``barcode`` field is empty. Explicitly entered or imported barcodes are never
+modified. This covers simple products, products with variants, variants added
+after template creation, and duplicated products.
+
+Existing products
+-----------------
+
+Use the **Generate Missing Barcodes** button in Settings (opens the wizard) or
+the **Generate Missing Barcodes** contextual action in the Product Variants
+list. Both process only ``product.product`` records with an empty barcode.
+
+Product variants
+----------------
+
+Every variant is a ``product.product`` record, so each one receives its own
+unique barcode through the same mechanism.
+
+Multi-company
+-------------
+
+Each company configures its own enabled state, prefix, format and sequence.
+Configuration is never shared between companies, and a multi-company record
+rule isolates the settings per company.
+
+Known limitations
+-----------------
+
+* The barcode is generated only once; if you change the format or prefix later,
+  existing barcodes are kept (policy: always "Keep Existing Barcodes").
+* EAN-13 values are internal identifiers, not GS1-registered codes, unless the
+  company owns an appropriate GS1 prefix.
+
+Installation
+------------
+
+1. Copy the ``flousflow_stock_barcode`` folder into an addons path.
+2. Install the "Flous Flow Stock Barcode" module from the Apps menu.
+3. Upgrade with the standard command:
+
+.. code-block:: bash
+
+    ./odoo-bin -c odoo.conf -d <database> -u flousflow_stock_barcode
+
+Installation does **not** modify existing products. Barcodes are only
+generated after the feature is enabled or after an explicit user action.
+
+Support
+-------
+
+* Author: Flous Flow
+* Website: https://flousflow.com
+* License: LGPL-3

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.flousflow_stock_barcode</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Automatic Product Barcodes"
+                     string="Automatic Product Barcodes"
+                     name="flousflow_stock_barcode">
+                    <block title="Barcode Generation" name="barcode_generation_setting_container">
+                        <setting id="enable_auto_barcode"
+                                 help="Automatically assign a unique barcode when a new product variant is created.">
+                            <field name="barcode_generation_enabled"/>
+                        </setting>
+                        <setting id="auto_barcode_format"
+                                 string="Barcode Format"
+                                 invisible="not barcode_generation_enabled"
+                                 help="Sequential Numeric, Prefix + Sequential Numeric, or EAN-13 (with checksum).">
+                            <field name="barcode_format"/>
+                        </setting>
+                        <setting id="auto_barcode_prefix"
+                                 string="Prefix"
+                                 invisible="not barcode_generation_enabled"
+                                 help="Optional prefix prepended to the generated number. Must contain digits only for EAN-13.">
+                            <field name="barcode_prefix"/>
+                        </setting>
+                        <setting id="auto_barcode_sequence_digits"
+                                 string="Sequence Digits"
+                                 invisible="not barcode_generation_enabled"
+                                 help="Number of digits of the sequential part. Example: prefix 20 and 10 digits produce 200000000001.">
+                            <field name="barcode_sequence_digits"/>
+                        </setting>
+                        <setting id="auto_barcode_starting_number"
+                                 string="Starting Number"
+                                 invisible="not barcode_generation_enabled"
+                                 help="First number to be generated.">
+                            <field name="barcode_starting_number"/>
+                        </setting>
+                        <setting id="auto_barcode_preview"
+                                 string="Barcode Preview"
+                                 invisible="not barcode_generation_enabled">
+                            <field name="barcode_preview" readonly="1"/>
+                        </setting>
+                    </block>
+                    <block title="Existing Products" name="existing_products_setting_container">
+                        <setting id="auto_barcode_existing_policy"
+                                 string="Existing Barcode Policy"
+                                 help="Existing product barcodes are never overwritten.">
+                            <field name="barcode_existing_policy"/>
+                        </setting>
+                        <setting id="auto_barcode_include_archived"
+                                 string="Include Archived Products"
+                                 invisible="not barcode_generation_enabled"
+                                 help="Include archived product variants when generating missing barcodes.">
+                            <field name="barcode_include_archived"/>
+                        </setting>
+                        <setting id="generate_missing_barcodes"
+                                 string="Generate Missing Barcodes"
+                                 help="Use Generate Missing Barcodes to assign barcodes to existing products.">
+                            <button name="action_generate_missing_barcodes"
+                                    type="object"
+                                    string="Generate Missing Barcodes"
+                                    class="btn-link"
+                                    icon="fa-arrow-right"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+</odoo>
