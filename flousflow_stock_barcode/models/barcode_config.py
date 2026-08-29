@@ -66,10 +66,10 @@ class AutoBarcodeConfig(models.Model):
     preview = fields.Char(
         string='Barcode Preview', compute='_compute_preview')
 
-    _company_uniq = models.Constraint(
-        'unique (company_id)',
-        'Only one barcode configuration can exist per company.',
-    )
+    _sql_constraints = [
+        ('company_uniq', 'unique (company_id)',
+         'Only one barcode configuration can exist per company.'),
+    ]
 
     @api.depends('barcode_format', 'prefix', 'sequence_digits', 'starting_number')
     def _compute_preview(self):

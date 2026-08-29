@@ -1,6 +1,6 @@
 {
     'name': 'Flous Flow Stock Barcode',
-    'version': '19.0.1.2.0',
+    'version': '18.0.1.0.0',
     'category': 'Inventory/Barcode',
     'summary': 'Automatically generate unique barcodes for products and variants.',
     'description': """
