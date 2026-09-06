@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 
 
 class AutoBarcodeGenerateWizard(models.TransientModel):
@@ -16,6 +16,14 @@ class AutoBarcodeGenerateWizard(models.TransientModel):
     missing_count = fields.Integer(
         string='Products Without Barcode', readonly=True,
         compute='_compute_missing_count')
+
+    @api.constrains('company_id')
+    def _check_company_id(self):
+        for wizard in self:
+            if wizard.company_id not in wizard.env.companies:
+                raise ValidationError(_(
+                    'You can only generate barcodes for a company you have '
+                    'access to.'))
 
     @api.depends('company_id', 'include_archived')
     def _compute_missing_count(self):

@@ -127,7 +127,7 @@ class AutoBarcodeConfig(models.Model):
                 config.sequence_id = Sequence.create({
                     'name': _('Product barcode sequence - %s',
                               config.company_id.name),
-                    'code': 'auto.product.barcode.%s' % config.company_id.id,
+                    'code': 'flousflow.stock.barcode.%s' % config.company_id.id,
                     'company_id': config.company_id.id,
                     'padding': config.sequence_digits,
                     'number_next': config.starting_number,
