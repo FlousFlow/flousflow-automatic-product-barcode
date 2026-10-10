@@ -35,6 +35,20 @@ patch(ProductScreen.prototype, {
         return super._barcodeProductAction(...arguments);
     },
 
+    async onPressEnterKey() {
+        const searchWord = this.pos.searchProductWord?.trim();
+        if (searchWord) {
+            const lotLine = await this._barcodeSmartLotAction(searchWord, { silent: true });
+            if (lotLine) {
+                this.pos.searchProductWord = "";
+                this.state.previousSearchWord = "";
+                this.state.currentOffset = 0;
+                return;
+            }
+        }
+        return super.onPressEnterKey(...arguments);
+    },
+
     async _barcodeSmartLotAction(code, options = {}) {
         const raw = code?.code || code?.base_code || "";
         let rows;
