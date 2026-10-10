@@ -1,0 +1,32 @@
+# Translation of Odoo Server.
+# This file contains the translation of the following modules:
+#   * auto_product_barcode_pos
+msgid ""
+msgstr ""
+"Project-Id-Version: Odoo Server 19.0\n"
+"Language: ar_001\n"
+"Language-Team: Arabic\n"
+"Last-Translator: Flous Flow\n"
+"PO-Revision-Date: 2026-10-10 00:00+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
+
+#. module: auto_product_barcode_pos
+#. odoo-javascript
+#: code:addons/auto_product_barcode_pos/static/src/app/product_screen_smart_lot.js:49
+msgid "Smart Lot lookup is unavailable. The scan was rejected."
+msgstr "تعذر البحث عن التشغيلة الذكية. تم رفض المسح."
+
+#. module: auto_product_barcode_pos
+#. odoo-javascript
+#: code:addons/auto_product_barcode_pos/static/src/app/product_screen_smart_lot.js:56
+msgid "The Smart Lot Barcode is unknown or belongs to another company."
+msgstr "باركود التشغيلة الذكي غير معروف أو تابع لشركة أخرى."
+
+#. module: auto_product_barcode_pos
+#. odoo-javascript
+#: code:addons/auto_product_barcode_pos/static/src/app/product_screen_smart_lot.js:67
+msgid "The product for this Smart Lot is not available in this POS."
+msgstr "منتج هذه التشغيلة الذكية غير متاح في نقطة البيع هذه."
