@@ -6,8 +6,11 @@
         <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
             <xpath expr="//header" position="inside">
+                <button name="action_open_smart_lot_creator" type="object"
+                        string="Create Lots &amp; Print Barcodes" class="oe_highlight"
+                        invisible="state in ('cancel', 'done')"/>
                 <button name="action_generate_print_lot_barcodes" type="object"
-                        string="Generate &amp; Print Lot Barcodes" class="oe_highlight"
+                        string="Print Assigned Lot Barcodes"
                         invisible="state in ('cancel', 'done')"/>
             </xpath>
         </field>

@@ -114,6 +114,17 @@ class StockLot(models.Model):
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
 
+    def action_open_smart_lot_creator(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Create Lots and Print Barcodes'),
+            'res_model': 'smart.lot.create.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_picking_id': self.id, 'active_id': self.id},
+        }
+
     def action_generate_print_lot_barcodes(self):
         self.ensure_one()
         lots = self.move_line_ids.filtered(
