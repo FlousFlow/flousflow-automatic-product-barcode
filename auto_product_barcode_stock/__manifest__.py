@@ -1,0 +1,23 @@
+{
+    'name': 'Flous Flow Smart Lot Barcode - Inventory',
+    'version': '19.0.2.0.0',
+    'summary': 'Stable Code 128 barcodes for native stock lots',
+    'category': 'Inventory/Barcode',
+    'author': 'Flous Flow',
+    'website': 'https://flousflow.com',
+    'license': 'LGPL-3',
+    'depends': ['flousflow_stock_barcode', 'stock'],
+    'data': [
+        'security/ir.model.access.csv',
+        'data/smart_lot_sequence.xml',
+        'views/smart_lot_views.xml',
+        'views/stock_picking_views.xml',
+        'views/product_views.xml',
+        'views/res_config_settings_views.xml',
+        'wizard/smart_lot_wizard_views.xml',
+        'report/smart_lot_label_report.xml',
+    ],
+    'installable': True,
+    'application': False,
+    'auto_install': False,
+}

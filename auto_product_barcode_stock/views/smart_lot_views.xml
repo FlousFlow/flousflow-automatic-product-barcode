@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_production_lot_form_smart_barcode" model="ir.ui.view">
+        <field name="name">stock.lot.form.smart.barcode</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='ref']" position="after">
+                <field name="smart_barcode" readonly="1"/>
+            </xpath>
+            <xpath expr="//form/sheet" position="inside">
+                <button name="action_print_smart_barcode" type="object" string="Print Smart Lot Barcode" class="oe_highlight"/>
+            </xpath>
+        </field>
+    </record>
+    <record id="view_production_lot_tree_smart_barcode" model="ir.ui.view">
+        <field name="name">stock.lot.list.smart.barcode</field>
+        <field name="model">stock.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='ref']" position="after"><field name="smart_barcode" optional="show"/></xpath>
+        </field>
+    </record>
+    <record id="action_smart_lot_backfill" model="ir.actions.act_window">
+        <field name="name">Generate Missing Smart Lot Barcodes</field>
+        <field name="res_model">smart.lot.backfill.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+    <menuitem id="menu_smart_lot_backfill" name="Generate Missing Smart Lot Barcodes"
+              parent="stock.menu_stock_inventory_control" action="action_smart_lot_backfill"
+              groups="stock.group_stock_manager" sequence="120"/>
+</odoo>

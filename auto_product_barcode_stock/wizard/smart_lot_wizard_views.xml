@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_smart_lot_backfill_wizard" model="ir.ui.view">
+        <field name="name">smart.lot.backfill.wizard.form</field>
+        <field name="model">smart.lot.backfill.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Generate Missing Smart Lot Barcodes">
+                <group><field name="company_id"/><field name="product_ids" widget="many2many_tags"/><field name="include_archived"/><field name="missing_count" readonly="1"/></group>
+                <footer><button name="action_generate" type="object" string="Generate" class="oe_highlight"/><button special="cancel" string="Cancel"/></footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_smart_lot_create_wizard" model="ir.ui.view">
+        <field name="name">smart.lot.create.wizard.form</field>
+        <field name="model">smart.lot.create.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Create Lots and Print Barcodes">
+                <group>
+                    <field name="picking_id"/>
+                    <field name="mode" invisible="1"/>
+                </group>
+                <field name="line_ids">
+                    <list editable="bottom">
+                        <field name="allowed_product_ids" column_invisible="True"/>
+                        <field name="product_id" domain="[('id', 'in', allowed_product_ids)]"/>
+                        <field name="lot_name" string="Manufacturer Lot/Batch (optional)"
+                               placeholder="Leave blank for automatic Lot"/>
+                        <field name="quantity"/>
+                        <field name="expiration_date"/>
+                    </list>
+                </field>
+                <footer>
+                    <button name="action_create_and_print" type="object"
+                            string="Apply &amp; Print Barcodes" class="oe_highlight"/>
+                    <button special="cancel" string="Cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

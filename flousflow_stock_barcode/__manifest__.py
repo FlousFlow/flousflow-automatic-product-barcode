@@ -1,6 +1,6 @@
 {
     'name': 'Flous Flow Stock Barcode',
-    'version': '19.0.1.3.0',
+    'version': '19.0.2.0.0',
     'category': 'Inventory/Barcode',
     'summary': 'Automatically generate unique barcodes for products and variants.',
     'description': """
@@ -31,6 +31,11 @@ the barcode format, prefix, sequence length and starting number. Use the
 
 Generated EAN-13 numbers are internal identifiers unless the company owns an
 appropriate GS1 prefix.
+
+Optional inventory/POS integrations are shipped in the same repository as
+``auto_product_barcode_stock`` and ``auto_product_barcode_pos``. They are not
+dependencies of this product-only addon, so existing installations do not
+silently install Inventory or Point of Sale.
 """,
     'author': 'Flous Flow',
     'website': 'https://flousflow.com',

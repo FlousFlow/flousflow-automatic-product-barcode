@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_smart_lot_barcode" model="ir.ui.view">
+        <field name="name">stock.picking.form.smart.lot.barcode</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_open_smart_lot_creator" type="object"
+                        string="Create Lots &amp; Print Barcodes" class="oe_highlight"
+                        invisible="state in ('cancel', 'done') or picking_type_code != 'incoming'"/>
+                <button name="action_open_smart_lot_redistributor" type="object"
+                        string="Redistribute Lots"
+                        invisible="state in ('cancel', 'done') or picking_type_code != 'incoming'"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>
