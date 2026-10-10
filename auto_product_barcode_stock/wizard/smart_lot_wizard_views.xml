@@ -21,7 +21,8 @@
                 </group>
                 <field name="line_ids">
                     <list editable="bottom">
-                        <field name="product_id"/>
+                        <field name="allowed_product_ids" column_invisible="True"/>
+                        <field name="product_id" domain="[('id', 'in', allowed_product_ids)]"/>
                         <field name="lot_name" string="Manufacturer Lot/Batch (optional)"
                                placeholder="Leave blank for automatic Lot"/>
                         <field name="quantity"/>

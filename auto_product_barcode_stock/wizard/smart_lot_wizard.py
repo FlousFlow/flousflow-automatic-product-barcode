@@ -67,7 +67,16 @@ class SmartLotCreateWizard(models.TransientModel):
     _description = 'Create Lots for an Incoming Transfer'
 
     picking_id = fields.Many2one('stock.picking', required=True, readonly=True)
+    allowed_product_ids = fields.Many2many(
+        'product.product', compute='_compute_allowed_product_ids')
     line_ids = fields.One2many('smart.lot.create.wizard.line', 'wizard_id', string='Lots')
+
+    @api.depends('picking_id')
+    def _compute_allowed_product_ids(self):
+        for wizard in self:
+            wizard.allowed_product_ids = wizard.picking_id.move_ids.mapped('product_id').filtered(
+                lambda product: product.tracking != 'none'
+            ) if wizard.picking_id else self.env['product.product']
 
     @api.model
     def default_get(self, fields_list):
@@ -232,6 +241,8 @@ class SmartLotCreateWizardLine(models.TransientModel):
     _order = 'id'
 
     wizard_id = fields.Many2one('smart.lot.create.wizard', required=True, ondelete='cascade')
+    allowed_product_ids = fields.Many2many(
+        related='wizard_id.allowed_product_ids', readonly=True)
     product_id = fields.Many2one('product.product', required=True)
     # Kept nullable so the wizard can open with prefilled quantity rows before
     # the operator enters the supplier's actual batch number.
