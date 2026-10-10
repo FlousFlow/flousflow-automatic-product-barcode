@@ -24,7 +24,7 @@
                     <div style="font-size: 10px; font-weight: bold; overflow: hidden; white-space: nowrap;"><t t-esc="lot.product_id.display_name"/></div>
                     <div style="font-size: 9px; margin-top: 2mm;">Lot: <t t-esc="lot.name"/></div>
                     <div style="margin-top: 2mm;">
-                        <span t-field="lot.smart_barcode" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 220, 'height': 45}"/>
+                        <span t-field="lot.smart_barcode" t-options="{'widget': 'barcode', 'symbology': lot.smart_barcode_symbology, 'width': 220, 'height': 45}"/>
                     </div>
                     <div style="font-size: 8px;"><t t-esc="lot.smart_barcode"/></div>
                     <div t-if="lot.expiration_date" style="font-size: 8px;">Expires: <t t-esc="lot.expiration_date"/></div>

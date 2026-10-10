@@ -1,6 +1,6 @@
 {
     'name': 'Flous Flow Smart Lot Barcode - Inventory',
-    'version': '19.0.1.0.0',
+    'version': '19.0.2.0.0',
     'summary': 'Stable Code 128 barcodes for native stock lots',
     'category': 'Inventory/Barcode',
     'author': 'Flous Flow',

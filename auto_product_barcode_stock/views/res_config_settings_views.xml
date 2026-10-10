@@ -6,11 +6,12 @@
         <field name="inherit_id" ref="stock.res_config_settings_view_form"/>
         <field name="arch" type="xml">
             <xpath expr="//block[@name='barcode_setting_container']" position="inside">
-                <setting id="smart_lot_barcode" string="Smart Lot Barcode" help="Generate stable Code 128 identifiers for native Lots.">
+                <setting id="smart_lot_barcode" string="Smart Lot Barcode" help="Use the same barcode format and sequence configured for Product Barcodes.">
                     <field name="smart_lot_enabled"/>
                     <field name="smart_lot_auto_generate" invisible="not smart_lot_enabled"/>
-                    <field name="smart_lot_prefix" invisible="not smart_lot_enabled"/>
-                    <field name="smart_lot_sequence_digits" invisible="not smart_lot_enabled"/>
+                    <div class="text-muted" invisible="not smart_lot_enabled">
+                        Lot labels use the Product Barcode format and sequence.
+                    </div>
                 </setting>
             </xpath>
         </field>

@@ -8,7 +8,10 @@
             <xpath expr="//header" position="inside">
                 <button name="action_open_smart_lot_creator" type="object"
                         string="Create Lots &amp; Print Barcodes" class="oe_highlight"
-                        invisible="state in ('cancel', 'done')"/>
+                        invisible="state in ('cancel', 'done') or picking_type_code != 'incoming'"/>
+                <button name="action_open_smart_lot_redistributor" type="object"
+                        string="Redistribute Lots"
+                        invisible="state in ('cancel', 'done') or picking_type_code != 'incoming'"/>
             </xpath>
         </field>
     </record>

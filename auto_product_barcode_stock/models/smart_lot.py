@@ -46,11 +46,24 @@ class SmartLotBarcodeConfig(models.Model):
 
     def _next_unique_barcode(self):
         self.ensure_one()
-        self._ensure_sequence()
+        ProductConfig = self.env['auto.barcode.config']
+        barcode_config = ProductConfig.search([
+            ('company_id', '=', self.company_id.id),
+        ], limit=1)
+        if not barcode_config:
+            barcode_config = ProductConfig.create({
+                'company_id': self.company_id.id,
+                'enabled': False,
+                'barcode_format': 'sequential',
+                'prefix': '',
+                'sequence_digits': 12,
+                'starting_number': 1,
+            })
         Lot = self.env['stock.lot'].with_context(active_test=False)
         Product = self.env['product.product'].with_context(active_test=False)
         for _attempt in range(100):
-            value = '%s%s' % (self.prefix, self.sequence_id.next_by_id())
+            value = barcode_config._format_barcode(
+                barcode_config.sequence_id.next_by_id())
             if Lot.search_count([('smart_barcode', '=', value)], limit=1):
                 continue
             if Product.search_count([('barcode', '=', value)], limit=1):
@@ -68,9 +81,18 @@ class StockLot(models.Model):
     smart_barcode = fields.Char(string='Smart Lot Barcode', index=True, copy=False, readonly=True)
     smart_barcode_company_id = fields.Many2one(
         'res.company', related='company_id', store=True, index=True, readonly=True)
+    smart_barcode_symbology = fields.Char(compute='_compute_smart_barcode_symbology')
     _smart_barcode_uniq = models.Constraint(
         'unique(smart_barcode)', 'Smart Lot Barcodes must be unique.',
     )
+
+    @api.depends('company_id', 'smart_barcode')
+    def _compute_smart_barcode_symbology(self):
+        for lot in self:
+            config = self.env['auto.barcode.config'].search([
+                ('company_id', '=', (lot.company_id or self.env.company).id),
+            ], limit=1)
+            lot.smart_barcode_symbology = 'EAN13' if config and config.barcode_format == 'ean13' else 'Code128'
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -125,6 +147,21 @@ class StockPicking(models.Model):
             'context': {'default_picking_id': self.id, 'active_id': self.id},
         }
 
+    def action_open_smart_lot_redistributor(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Redistribute Lots'),
+            'res_model': 'smart.lot.create.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_picking_id': self.id,
+                'default_mode': 'redistribute',
+                'active_id': self.id,
+            },
+        }
+
     def action_generate_print_lot_barcodes(self):
         self.ensure_one()
         lots = self.move_line_ids.filtered(
@@ -159,11 +196,12 @@ class ResConfigSettings(models.TransientModel):
     def get_values(self):
         values = super().get_values()
         config = self.env['smart.lot.barcode.config'].search([('company_id', '=', self.env.company.id)], limit=1)
+        product_config = self.env['auto.barcode.config'].search([('company_id', '=', self.env.company.id)], limit=1)
         values.update({
             'smart_lot_enabled': config.enabled if config else True,
             'smart_lot_auto_generate': config.auto_generate if config else True,
-            'smart_lot_prefix': config.prefix if config else 'FFL-',
-            'smart_lot_sequence_digits': config.sequence_digits if config else 12,
+            'smart_lot_prefix': product_config.prefix if product_config else '',
+            'smart_lot_sequence_digits': product_config.sequence_digits if product_config else 12,
         })
         return values
 
