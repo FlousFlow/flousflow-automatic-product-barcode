@@ -1,3 +1,5 @@
+import re
+
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools.float_utils import float_compare, float_is_zero
@@ -98,6 +100,22 @@ class SmartLotCreateWizard(models.TransientModel):
             lambda line: line.product_id == product and not line.lot_id and not line.lot_name
         )
 
+    def _next_internal_lot_name(self, product, reserved_names=None):
+        self.ensure_one()
+        reserved_names = set(reserved_names or ())
+        source = product.barcode or product.default_code or 'P%s' % product.id
+        source = re.sub(r'[^A-Za-z0-9]+', '-', source).strip('-') or 'P%s' % product.id
+        prefix = 'FFL-%s-' % source
+        Lot = self.env['stock.lot']
+        for number in range(1, 1000000):
+            candidate = '%s%06d' % (prefix, number)
+            if candidate not in reserved_names and not Lot.search_count([
+                ('name', '=', candidate), ('product_id', '=', product.id),
+                '|', ('company_id', '=', self.picking_id.company_id.id), ('company_id', '=', False),
+            ]):
+                return candidate
+        raise UserError(_('Could not generate an internal Lot name for %s.') % product.display_name)
+
     def action_create_and_print(self):
         self.ensure_one()
         picking = self.picking_id
@@ -127,9 +145,10 @@ class SmartLotCreateWizard(models.TransientModel):
             wizard_lines = self.line_ids.filtered(lambda line: line.product_id == product)
             if any(float_is_zero(line.quantity, precision_rounding=product.uom_id.rounding) or line.quantity < 0 for line in wizard_lines):
                 raise ValidationError(_('Lot quantities must be greater than zero.'))
-            names = [(line.lot_name or '').strip() for line in wizard_lines]
-            if any(not name for name in names):
-                raise ValidationError(_('Enter the actual manufacturer Lot/Batch for every row.'))
+            names = []
+            for line in wizard_lines:
+                name = (line.lot_name or '').strip() or self._next_internal_lot_name(product, names)
+                names.append(name)
             if len(names) != len(set(names)):
                 raise ValidationError(_('The same Lot/Batch cannot be repeated for one product.'))
 
@@ -147,8 +166,7 @@ class SmartLotCreateWizard(models.TransientModel):
                 for move_line in move_lines
             ]
             cursor = 0
-            for wizard_line in wizard_lines:
-                lot_name = wizard_line.lot_name.strip()
+            for wizard_line, lot_name in zip(wizard_lines, names):
                 lot = self.env['stock.lot'].search([
                     ('name', '=', lot_name), ('product_id', '=', product.id),
                     '|', ('company_id', '=', picking.company_id.id), ('company_id', '=', False),
@@ -217,6 +235,9 @@ class SmartLotCreateWizardLine(models.TransientModel):
     product_id = fields.Many2one('product.product', required=True)
     # Kept nullable so the wizard can open with prefilled quantity rows before
     # the operator enters the supplier's actual batch number.
-    lot_name = fields.Char(string='Manufacturer Lot/Batch')
+    lot_name = fields.Char(
+        string='Manufacturer Lot/Batch (optional)',
+        help='Leave blank to generate an internal Lot name from the product barcode or code.',
+    )
     quantity = fields.Float(required=True, digits='Product Unit')
     expiration_date = fields.Date(string='Expiration Date')

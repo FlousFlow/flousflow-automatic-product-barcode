@@ -22,7 +22,8 @@
                 <field name="line_ids">
                     <list editable="bottom">
                         <field name="product_id"/>
-                        <field name="lot_name"/>
+                        <field name="lot_name" string="Manufacturer Lot/Batch (optional)"
+                               placeholder="Leave blank for automatic Lot"/>
                         <field name="quantity"/>
                         <field name="expiration_date"/>
                     </list>
