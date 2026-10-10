@@ -127,7 +127,7 @@ class SmartLotCreateWizard(models.TransientModel):
             wizard_lines = self.line_ids.filtered(lambda line: line.product_id == product)
             if any(float_is_zero(line.quantity, precision_rounding=product.uom_id.rounding) or line.quantity < 0 for line in wizard_lines):
                 raise ValidationError(_('Lot quantities must be greater than zero.'))
-            names = [line.lot_name.strip() for line in wizard_lines]
+            names = [(line.lot_name or '').strip() for line in wizard_lines]
             if any(not name for name in names):
                 raise ValidationError(_('Enter the actual manufacturer Lot/Batch for every row.'))
             if len(names) != len(set(names)):
