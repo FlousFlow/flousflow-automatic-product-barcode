@@ -109,6 +109,16 @@ Installation
 Installation does **not** modify existing products. Barcodes are only
 generated after the feature is enabled or after an explicit user action.
 
+Smart Lot Barcode extensions
+----------------------------
+
+The repository also contains two optional Odoo 19 Community bridge addons:
+``auto_product_barcode_stock`` generates stable Code 128 identifiers for native
+tracked Lots and prints receipt/Lot/product labels; ``auto_product_barcode_pos``
+resolves those identifiers in POS to the exact product and native Lot. They are
+separate dependencies so the original product-only addon remains unchanged for
+databases that do not use Inventory or POS.
+
 Support
 -------
 

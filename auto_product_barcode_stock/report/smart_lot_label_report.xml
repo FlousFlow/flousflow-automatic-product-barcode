@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="paperformat_smart_lot_50x30" model="report.paperformat">
+        <field name="name">Smart Lot 50x30 mm</field>
+        <field name="format">custom</field><field name="page_width">50</field><field name="page_height">30</field>
+        <field name="orientation">Portrait</field><field name="margin_top">2</field><field name="margin_bottom">2</field>
+        <field name="margin_left">2</field><field name="margin_right">2</field><field name="dpi">203</field>
+    </record>
+    <record id="action_smart_lot_label" model="ir.actions.report">
+        <field name="name">Smart Lot Barcode Label</field>
+        <field name="model">stock.lot</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">auto_product_barcode_stock.smart_lot_label</field>
+        <field name="report_file">auto_product_barcode_stock.smart_lot_label</field>
+        <field name="paperformat_id" ref="paperformat_smart_lot_50x30"/>
+        <field name="binding_model_id" ref="stock.model_stock_lot"/>
+        <field name="binding_type">report</field>
+    </record>
+    <template id="smart_lot_label">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="lot">
+                <t t-foreach="range((data or {}).get('label_quantity', 1))" t-as="copy_no">
+                <div class="page" style="font-family: sans-serif; text-align: center; page-break-after: always;">
+                    <div style="font-size: 10px; font-weight: bold; overflow: hidden; white-space: nowrap;"><t t-esc="lot.product_id.display_name"/></div>
+                    <div style="font-size: 9px; margin-top: 2mm;">Lot: <t t-esc="lot.name"/></div>
+                    <div style="margin-top: 2mm;">
+                        <span t-field="lot.smart_barcode" t-options="{'widget': 'barcode', 'symbology': 'Code128', 'width': 220, 'height': 45}"/>
+                    </div>
+                    <div style="font-size: 8px;"><t t-esc="lot.smart_barcode"/></div>
+                    <div t-if="lot.expiration_date" style="font-size: 8px;">Expires: <t t-esc="lot.expiration_date"/></div>
+                </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>
