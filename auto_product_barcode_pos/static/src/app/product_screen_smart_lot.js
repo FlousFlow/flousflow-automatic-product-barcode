@@ -50,7 +50,7 @@ patch(ProductScreen.prototype, {
     },
 
     async _barcodeSmartLotAction(code, options = {}) {
-        const raw = code?.code || code?.base_code || "";
+        const raw = typeof code === "string" ? code : code?.code || code?.base_code || "";
         let rows;
         try {
             rows = await this.pos.data.searchRead(
