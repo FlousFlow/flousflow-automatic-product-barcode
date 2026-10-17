@@ -127,12 +127,15 @@ class TestAutoProductBarcode(TransactionCase):
 
     def test_10_archived_included(self):
         self.config.write({'enabled': False})
+        baseline = self.Wizard.create({
+            'company_id': self.company.id, 'include_archived': True,
+        }).missing_count
         product = self._create_product(name='Archived')
         product.write({'active': False})
         self.config.write({'enabled': True})
         wizard = self.Wizard.create({
             'company_id': self.company.id, 'include_archived': True})
-        self.assertEqual(wizard.missing_count, 1)
+        self.assertEqual(wizard.missing_count, baseline + 1)
         wizard.action_generate()
         self.assertTrue(product.barcode)
 

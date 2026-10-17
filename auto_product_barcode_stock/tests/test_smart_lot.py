@@ -40,6 +40,8 @@ class TestSmartLotBarcode(TransactionCase):
         self.assertTrue(lot.smart_barcode)
 
     def test_untracked_product_is_not_assigned(self):
-        product = self.Product.create({'name': 'Untracked', 'is_storable': True, 'tracking': 'none'})
+        # Odoo 20 represents an untracked storable product with a false
+        # tracking value; the legacy ``'none'`` selection was removed.
+        product = self.Product.create({'name': 'Untracked', 'is_storable': True, 'tracking': False})
         lot = self.Lot.create({'name': 'NOT-ELIGIBLE', 'product_id': product.id, 'company_id': self.company.id})
         self.assertFalse(lot.smart_barcode)

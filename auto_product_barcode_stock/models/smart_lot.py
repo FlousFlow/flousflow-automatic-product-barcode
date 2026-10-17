@@ -107,7 +107,11 @@ class StockLot(models.Model):
             ('auto_generate', '=', True),
         ])
         by_company = {config.company_id.id: config for config in configs}
-        for lot in self.filtered(lambda r: not r.smart_barcode and r.product_id.tracking != 'none'):
+        # Odoo 20 represents untracked products with a false tracking value;
+        # only lot- and serial-tracked products can receive Smart Lot labels.
+        for lot in self.filtered(
+            lambda r: not r.smart_barcode and r.product_id.tracking in ('lot', 'serial')
+        ):
             config = by_company.get((lot.company_id or self.env.company).id)
             if config:
                 lot.smart_barcode = config._next_unique_barcode()
