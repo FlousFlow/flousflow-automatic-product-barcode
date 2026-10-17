@@ -1,8 +1,8 @@
 {
-    'name': 'Flous Flow Stock Barcode',
+    'name': 'Flous Flow Automatic Product & Lot Barcode',
     'version': '20.0.1.0.0',
     'category': 'Inventory/Barcode',
-    'summary': 'Automatically generate unique barcodes for products and variants.',
+    'summary': 'Generate product and Smart Lot barcodes for Inventory and POS.',
     'description': """
 Flous Flow Stock Barcode
 =========================
@@ -32,22 +32,34 @@ the barcode format, prefix, sequence length and starting number. Use the
 Generated EAN-13 numbers are internal identifiers unless the company owns an
 appropriate GS1 prefix.
 
-Optional inventory/POS integrations are shipped in the same repository as
-``auto_product_barcode_stock`` and ``auto_product_barcode_pos``. They are not
-dependencies of this product-only addon, so existing installations do not
-silently install Inventory or Point of Sale.
+Inventory and POS Smart Lot barcode support is included in this single Apps
+module. Installing it enables product barcode generation, tracked-lot barcode
+generation, receipt redistribution, printing, and POS scanning.
 """,
     'author': 'Flous Flow',
     'website': 'https://flousflow.com',
     'license': 'LGPL-3',
-    'depends': ['product'],
+    'depends': ['product', 'stock', 'point_of_sale'],
     'data': [
         'security/ir.access.csv',
+        'auto_product_barcode_stock/security/ir.access.csv',
         'views/res_config_settings_views.xml',
         'views/barcode_config_views.xml',
         'wizard/barcode_generate_wizard_views.xml',
         'data/server_actions.xml',
+        'auto_product_barcode_stock/data/smart_lot_sequence.xml',
+        'auto_product_barcode_stock/views/smart_lot_views.xml',
+        'auto_product_barcode_stock/views/stock_picking_views.xml',
+        'auto_product_barcode_stock/views/product_views.xml',
+        'auto_product_barcode_stock/views/res_config_settings_views.xml',
+        'auto_product_barcode_stock/wizard/smart_lot_wizard_views.xml',
+        'auto_product_barcode_stock/report/smart_lot_label_report.xml',
     ],
+    'assets': {
+        'point_of_sale._assets_pos': [
+            'auto_product_barcode_pos/static/src/app/product_screen_smart_lot.js',
+        ],
+    },
     'images': [
         'static/description/thumbnail.png',
         'static/description/banner.png',

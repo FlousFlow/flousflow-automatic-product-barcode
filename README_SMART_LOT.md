@@ -1,12 +1,16 @@
 # Smart Lot Barcode extensions (Odoo 20 Community)
 
-The original `auto_product_barcode` addon remains product-only and keeps its
-existing behavior. Inventory and POS are deliberately optional bridge addons:
+This repository is distributed as one Odoo Apps module:
+`flousflow_stock_barcode`. It includes product barcode generation, Inventory
+Smart Lot workflows, and the POS bridge in one installable package.
 
-* `auto_product_barcode_stock` depends on `stock` and adds the persistent
+The product barcode behavior remains backward compatible. Inventory and POS
+support are included in the same module:
+
+* the Inventory component depends on `stock` and adds the persistent
   `stock.lot.smart_barcode` field, company-scoped sequences, safe backfill,
   receipt/product/Lot printing actions, and Code 128 QWeb labels.
-* `auto_product_barcode_pos` depends on `point_of_sale` and resolves an `FFL-`
+* the POS component depends on `point_of_sale` and resolves an `FFL-`
   Smart Lot scan to the native product and native lot name in one POS scan.
 
 The manufacturer lot name (`stock.lot.name`) and product barcode are never
@@ -23,7 +27,7 @@ reconciliation policy.
 Install/update in Odoo 20 with the repository root on `addons_path`:
 
 ```bash
-./odoo-bin -d <db> -u auto_product_barcode_stock,auto_product_barcode_pos --stop-after-init
+./odoo-bin -d <db> -u flousflow_stock_barcode --stop-after-init
 ```
 
 Run the bridge tests with `--test-enable` on a clean Odoo 20 Community database.

@@ -6,6 +6,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Odoo Server 20.0\n"
 "Language: ar\n"
+"Language-Team: Arabic\n"
+"Last-Translator: Flous Flow\n"
+"PO-Revision-Date: 2026-10-17 16:55+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -194,3 +197,195 @@ msgstr "رقم البداية لا يتسع لطول التسلسل المُعد
 #. module: flousflow_stock_barcode
 msgid "Use Generate Missing Barcodes to assign barcodes to existing products."
 msgstr "استخدم توليد الباركودات الناقصة لتعيين باركودات للمنتجات الموجودة."
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot Barcode Generation"
+msgstr "توليد باركودات التشغيلات الذكية"
+
+#. module: flousflow_stock_barcode
+msgid "Enable Smart Lot Barcodes"
+msgstr "تفعيل باركودات التشغيلات الذكية"
+
+#. module: flousflow_stock_barcode
+msgid "Assign a barcode automatically to every new lot or serial of a tracked product."
+msgstr "تعيين باركود تلقائياً لكل تشغيلة أو رقم تسلسلي جديد لمنتج متتبع."
+
+#. module: flousflow_stock_barcode
+msgid "Generate for New Lots"
+msgstr "التوليد للتشغيلات الجديدة"
+
+#. module: flousflow_stock_barcode
+msgid "Generate the Smart Lot Barcode automatically when the lot or serial is created."
+msgstr "توليد باركود التشغيلة الذكي تلقائياً عند إنشاء التشغيلة أو الرقم التسلسلي."
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot barcodes use the same format, prefix and sequence as Product Barcodes."
+msgstr "تستخدم باركودات التشغيلات الذكية نفس الصيغة والبادئة والتسلسل الخاص بباركودات المنتجات."
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot labels use the Product Barcode format and sequence."
+msgstr "تستخدم ملصقات التشغيلات الذكية نفس صيغة وتسلسل باركودات المنتجات."
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot Barcode"
+msgstr "باركود التشغيلة الذكي"
+
+#. module: flousflow_stock_barcode
+msgid "Use the same barcode format and sequence configured for Product Barcodes."
+msgstr "استخدم نفس صيغة وتسلسل باركودات المنتجات المُعدّة في الإعدادات."
+
+#. module: flousflow_stock_barcode
+msgid "Generate for new Lots"
+msgstr "التوليد للتشغيلات الجديدة"
+
+#. module: flousflow_stock_barcode
+msgid "Lot labels use the Product Barcode format and sequence."
+msgstr "تستخدم ملصقات التشغيلات نفس صيغة وتسلسل باركود المنتج."
+
+#. module: flousflow_stock_barcode
+msgid "Create Lots and Print Barcodes"
+msgstr "إنشاء التشغيلات وطباعة الباركودات"
+
+#. module: flousflow_stock_barcode
+msgid "Create Lots & Print Barcodes"
+msgstr "إنشاء التشغيلات وطباعة الباركودات"
+
+#. module: flousflow_stock_barcode
+msgid "Redistribute Lots"
+msgstr "إعادة توزيع التشغيلات"
+
+#. module: flousflow_stock_barcode
+msgid "Apply & Print Barcodes"
+msgstr "تطبيق وطباعة الباركودات"
+
+#. module: flousflow_stock_barcode
+msgid "Manufacturer Lot/Batch (optional)"
+msgstr "تشغيلة/دفعة المصنع (اختياري)"
+
+#. module: flousflow_stock_barcode
+msgid "Leave blank for automatic Lot"
+msgstr "اتركه فارغًا لإنشاء التشغيلة تلقائيًا"
+
+#. module: flousflow_stock_barcode
+msgid "Leave blank to generate an internal Lot name from the product barcode or code."
+msgstr "اتركه فارغاً لإنشاء اسم تشغيلة داخلي من باركود المنتج أو كوده."
+
+#. module: flousflow_stock_barcode
+msgid "Expiration Date"
+msgstr "تاريخ الصلاحية"
+
+#. module: flousflow_stock_barcode
+msgid "Quantity"
+msgstr "الكمية"
+
+#. module: flousflow_stock_barcode
+msgid "Generate Missing Smart Lot Barcodes"
+msgstr "توليد باركودات التشغيلات الذكية الناقصة"
+
+#. module: flousflow_stock_barcode
+msgid "Generate"
+msgstr "توليد"
+
+#. module: flousflow_stock_barcode
+msgid "Include archived"
+msgstr "تضمين المؤرشف"
+
+#. module: flousflow_stock_barcode
+msgid "Print Smart Lot Barcode"
+msgstr "طباعة باركود التشغيلة الذكي"
+
+#. module: flousflow_stock_barcode
+msgid "Print Lot Barcodes"
+msgstr "طباعة باركودات التشغيلات"
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot Barcode Label"
+msgstr "ملصق باركود التشغيلة الذكي"
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot 50x30 mm"
+msgstr "تشغيلة ذكية 50×30 مم"
+
+#. module: flousflow_stock_barcode
+msgid "Lot:"
+msgstr "التشغيلة:"
+
+#. module: flousflow_stock_barcode
+msgid "Expires:"
+msgstr "تنتهي في:"
+
+#. module: flousflow_stock_barcode
+msgid "Enable Smart Lot Barcodes for this company first."
+msgstr "فعّل باركودات التشغيلات الذكية لهذه الشركة أولًا."
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot Barcodes"
+msgstr "باركودات التشغيلات الذكية"
+
+#. module: flousflow_stock_barcode
+msgid "Label quantity must be between 1 and 1000."
+msgstr "يجب أن تكون كمية الملصقات بين 1 و1000."
+
+#. module: flousflow_stock_barcode
+msgid "Lots can only be created from incoming receipts."
+msgstr "لا يمكن إنشاء التشغيلات إلا من الاستلامات الواردة."
+
+#. module: flousflow_stock_barcode
+msgid "Lots cannot be created on a completed or cancelled transfer."
+msgstr "لا يمكن إنشاء التشغيلات في تحويل مكتمل أو ملغى."
+
+#. module: flousflow_stock_barcode
+msgid "Add at least one manufacturer Lot/Batch before continuing."
+msgstr "أضف تشغيلة/دفعة مصنع واحدة على الأقل قبل المتابعة."
+
+#. module: flousflow_stock_barcode
+msgid "Every selected product must be a tracked product on this transfer."
+msgstr "يجب أن يكون كل منتج محدد منتجًا متتبعًا في هذا التحويل."
+
+#. module: flousflow_stock_barcode
+msgid "Lot quantities must be greater than zero."
+msgstr "يجب أن تكون كميات التشغيلات أكبر من صفر."
+
+#. module: flousflow_stock_barcode
+msgid "The same Lot/Batch cannot be repeated for one product."
+msgstr "لا يمكن تكرار نفس التشغيلة/الدفعة للمنتج الواحد."
+
+#. module: flousflow_stock_barcode
+msgid "The total quantity for %(product)s must be %(available)s; you entered %(requested)s."
+msgstr "يجب أن يساوي إجمالي كمية %(product)s مقدار %(available)s؛ وقد أدخلت %(requested)s."
+
+#. module: flousflow_stock_barcode
+msgid "Could not generate an internal Lot name for %s."
+msgstr "تعذر إنشاء اسم تشغيلة داخلي للمنتج %s."
+
+#. module: flousflow_stock_barcode
+msgid "Lots can only be redistributed on incoming receipts."
+msgstr "لا يمكن إعادة توزيع التشغيلات إلا في الاستلامات الواردة."
+
+#. module: flousflow_stock_barcode
+msgid "Lots cannot be redistributed on a completed or cancelled transfer."
+msgstr "لا يمكن إعادة توزيع التشغيلات في تحويل مكتمل أو ملغى."
+
+#. module: flousflow_stock_barcode
+msgid "There are no assigned Lots to redistribute on this transfer."
+msgstr "لا توجد تشغيلات مُسندة لإعادة توزيعها في هذا التحويل."
+
+#. module: flousflow_stock_barcode
+msgid "Lot %(lot)s already has a different expiration date."
+msgstr "التشغيلة %(lot)s لها تاريخ صلاحية مختلف بالفعل."
+
+#. module: flousflow_stock_barcode
+msgid "Create Lots for an Incoming Transfer"
+msgstr "إنشاء تشغيلات لاستلام وارد"
+
+#. module: flousflow_stock_barcode
+msgid "Smart Lot lookup is unavailable. The scan was rejected."
+msgstr "تعذر البحث عن التشغيلة الذكية. تم رفض المسح."
+
+#. module: flousflow_stock_barcode
+msgid "The Smart Lot Barcode is unknown or belongs to another company."
+msgstr "باركود التشغيلة الذكي غير معروف أو تابع لشركة أخرى."
+
+#. module: flousflow_stock_barcode
+msgid "The product for this Smart Lot is not available in this POS."
+msgstr "منتج هذه التشغيلة الذكية غير متاح في نقطة البيع هذه."

@@ -98,7 +98,8 @@ Known limitations
 Installation
 ------------
 
-1. Copy the ``flousflow_stock_barcode`` folder into an addons path.
+1. Copy the ``flousflow_stock_barcode`` folder into an addons path. This is the
+   only installable module in the repository; it includes Inventory and POS.
 2. Install the "Flous Flow Stock Barcode" module from the Apps menu.
 3. Upgrade with the standard command:
 
@@ -113,8 +114,8 @@ Smart Lot Barcode extensions
 ----------------------------
 
 The repository also contains two optional Odoo 20 Community bridge addons:
-``auto_product_barcode_stock`` generates stable Code 128 identifiers for native
-tracked Lots and prints receipt/Lot/product labels; ``auto_product_barcode_pos``
+The included Inventory component generates stable Code 128 identifiers for
+native tracked Lots and prints receipt/Lot/product labels; the included POS
 resolves those identifiers in POS to the exact product and native Lot. They are
 separate dependencies so the original product-only addon remains unchanged for
 databases that do not use Inventory or POS.

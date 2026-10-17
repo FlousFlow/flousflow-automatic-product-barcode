@@ -1,1 +1,2 @@
 from . import test_barcode_generator
+from odoo.addons.flousflow_stock_barcode.auto_product_barcode_stock.tests import test_smart_lot

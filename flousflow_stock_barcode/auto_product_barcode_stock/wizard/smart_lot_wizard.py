@@ -58,7 +58,7 @@ class SmartLotPrintWizard(models.TransientModel):
         if self.label_quantity < 1 or self.label_quantity > 1000:
             raise UserError(_('Label quantity must be between 1 and 1000.'))
         self.lot_ids._ensure_smart_barcodes()
-        return self.env.ref('auto_product_barcode_stock.action_smart_lot_label').report_action(
+        return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(
             self.lot_ids, data={'label_quantity': self.label_quantity, 'label_format': self.label_format})
 
 
@@ -250,7 +250,7 @@ class SmartLotCreateWizard(models.TransientModel):
                 lots |= lot
 
         lots._ensure_smart_barcodes()
-        return self.env.ref('auto_product_barcode_stock.action_smart_lot_label').report_action(lots)
+        return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(lots)
 
     def _action_redistribute(self):
         self.ensure_one()
@@ -352,7 +352,7 @@ class SmartLotCreateWizard(models.TransientModel):
                 lots |= lot
 
         lots._ensure_smart_barcodes()
-        return self.env.ref('auto_product_barcode_stock.action_smart_lot_label').report_action(lots)
+        return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(lots)
 
 
 class SmartLotCreateWizardLine(models.TransientModel):

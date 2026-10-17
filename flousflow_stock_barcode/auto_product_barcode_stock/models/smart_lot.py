@@ -119,7 +119,7 @@ class StockLot(models.Model):
 
     def action_print_smart_barcode(self):
         self._ensure_smart_barcodes()
-        return self.env.ref('auto_product_barcode_stock.action_smart_lot_label').report_action(self)
+        return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(self)
 
     @api.model
     def resolve_smart_barcode(self, barcode):
@@ -174,7 +174,7 @@ class StockPicking(models.Model):
         lots._ensure_smart_barcodes()
         if not lots:
             raise UserError(_('No assigned tracked Lots were found. Enter the actual manufacturer batches first.'))
-        return self.env.ref('auto_product_barcode_stock.action_smart_lot_label').report_action(lots)
+        return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(lots)
 
 
 class ProductProduct(models.Model):
@@ -186,7 +186,7 @@ class ProductProduct(models.Model):
         lots._ensure_smart_barcodes()
         if not lots:
             raise UserError(_('This variant has no native Lots yet.'))
-        return self.env.ref('auto_product_barcode_stock.action_smart_lot_label').report_action(lots)
+        return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(lots)
 
 
 class ResConfigSettings(models.TransientModel):
