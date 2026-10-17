@@ -3,16 +3,30 @@
     <record id="res_config_settings_view_form_smart_lot" model="ir.ui.view">
         <field name="name">res.config.settings.smart.lot.barcode</field>
         <field name="model">res.config.settings</field>
-        <field name="inherit_id" ref="stock.res_config_settings_view_form"/>
+        <field name="inherit_id" ref="flousflow_stock_barcode.res_config_settings_view_form"/>
         <field name="arch" type="xml">
-            <xpath expr="//block[@name='barcode_setting_container']" position="inside">
-                <setting id="smart_lot_barcode" string="Smart Lot Barcode" help="Use the same barcode format and sequence configured for Product Barcodes.">
-                    <field name="smart_lot_enabled"/>
-                    <field name="smart_lot_auto_generate" invisible="not smart_lot_enabled"/>
-                    <div class="text-muted" invisible="not smart_lot_enabled">
-                        Lot labels use the Product Barcode format and sequence.
-                    </div>
-                </setting>
+            <xpath expr="//app[@name='flousflow_stock_barcode']" position="inside">
+                <block title="Smart Lot Barcode Generation" name="smart_lot_barcode_setting_container">
+                    <setting id="enable_smart_lot_barcode"
+                             string="Enable Smart Lot Barcodes"
+                             help="Assign a barcode automatically to every new lot or serial of a tracked product.">
+                        <field name="smart_lot_enabled"/>
+                    </setting>
+                    <setting id="smart_lot_auto_generate"
+                             string="Generate for New Lots"
+                             invisible="not smart_lot_enabled"
+                             help="Generate the Smart Lot Barcode automatically when the lot or serial is created.">
+                        <field name="smart_lot_auto_generate"/>
+                    </setting>
+                    <setting id="smart_lot_barcode_format_info"
+                             string="Barcode Format"
+                             invisible="not smart_lot_enabled"
+                             help="Smart Lot barcodes use the same format, prefix and sequence as Product Barcodes.">
+                        <div class="text-muted">
+                            Smart Lot labels use the Product Barcode format and sequence.
+                        </div>
+                    </setting>
+                </block>
             </xpath>
         </field>
     </record>

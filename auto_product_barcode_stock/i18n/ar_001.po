@@ -13,6 +13,45 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=6; plural=n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5;\n"
 
+msgid "Smart Lot Barcode Generation"
+msgstr "توليد باركودات التشغيلات الذكية"
+
+msgid "Assign a barcode automatically to every new lot or serial of a tracked product."
+msgstr "تعيين باركود تلقائياً لكل تشغيلة أو رقم تسلسلي جديد لمنتج متتبع."
+
+msgid "Generate for New Lots"
+msgstr "التوليد للتشغيلات الجديدة"
+
+msgid "Generate the Smart Lot Barcode automatically when the lot or serial is created."
+msgstr "توليد باركود التشغيلة الذكي تلقائياً عند إنشاء التشغيلة أو الرقم التسلسلي."
+
+msgid "Barcode Format"
+msgstr "صيغة الباركود"
+
+msgid "Smart Lot barcodes use the same format, prefix and sequence as Product Barcodes."
+msgstr "تستخدم باركودات التشغيلات الذكية نفس الصيغة والبادئة والتسلسل الخاص بباركودات المنتجات."
+
+msgid "Smart Lot labels use the Product Barcode format and sequence."
+msgstr "تستخدم ملصقات التشغيلات الذكية نفس صيغة وتسلسل باركودات المنتجات."
+
+msgid "Smart Lot Prefix"
+msgstr "بادئة التشغيلة الذكية"
+
+msgid "Print Lot Barcodes"
+msgstr "طباعة باركودات التشغيلات"
+
+msgid "Lots"
+msgstr "التشغيلات"
+
+msgid "Leave blank to generate an internal Lot name from the product barcode or code."
+msgstr "اتركه فارغاً لإنشاء اسم تشغيلة داخلي من باركود المنتج أو كوده."
+
+msgid "Lot"
+msgstr "التشغيلة"
+
+msgid "Expires"
+msgstr "تنتهي في"
+
 #. module: auto_product_barcode_stock
 #: model_terms:ir.ui.view,arch_db:auto_product_barcode_stock.res_config_settings_view_form_smart_lot
 msgid "Smart Lot Barcode"
