@@ -39,6 +39,22 @@ class TestSmartLotBarcode(TransactionCase):
         lot._ensure_smart_barcodes()
         self.assertTrue(lot.smart_barcode)
 
+    def test_disabled_smart_lot_feature_does_not_assign(self):
+        self.config.write({'enabled': False})
+        lot = self.Lot.create({
+            'name': 'BATCH-D',
+            'product_id': self._product().id,
+            'company_id': self.company.id,
+        })
+        self.assertFalse(lot.smart_barcode)
+        self.config.write({'enabled': True})
+        enabled_lot = self.Lot.create({
+            'name': 'BATCH-E',
+            'product_id': self._product().id,
+            'company_id': self.company.id,
+        })
+        self.assertTrue(enabled_lot.smart_barcode)
+
     def test_untracked_product_is_not_assigned(self):
         # Odoo 20 represents an untracked storable product with a false
         # tracking value; the legacy ``'none'`` selection was removed.

@@ -15,7 +15,7 @@ class SmartLotBackfillWizard(models.TransientModel):
     missing_count = fields.Integer(compute='_compute_missing_count')
 
     def _domain(self):
-        domain = [('smart_barcode', '=', False), ('product_id.tracking', '!=', 'none'),
+        domain = [('smart_barcode', '=', False), ('product_id.tracking', 'in', ['lot', 'serial']),
                   '|', ('company_id', '=', False), ('company_id', '=', self.company_id.id)]
         if self.product_ids:
             domain.append(('product_id', 'in', self.product_ids.ids))
@@ -79,7 +79,7 @@ class SmartLotCreateWizard(models.TransientModel):
     def _compute_allowed_product_ids(self):
         for wizard in self:
             wizard.allowed_product_ids = wizard.picking_id.move_ids.mapped('product_id').filtered(
-                lambda product: product.tracking != 'none'
+                lambda product: product.tracking in ('lot', 'serial')
             ) if wizard.picking_id else self.env['product.product']
 
     @api.model
@@ -94,11 +94,11 @@ class SmartLotCreateWizard(models.TransientModel):
         mode = values.get('mode') or self.env.context.get('default_mode') or 'create'
         if mode == 'redistribute':
             source_lines = picking.move_line_ids.filtered(
-                lambda line: line.product_id.tracking != 'none' and line.lot_id
+                lambda line: line.product_id.tracking in ('lot', 'serial') and line.lot_id
             )
         else:
             source_lines = picking.move_line_ids.filtered(
-                lambda line: line.product_id.tracking != 'none' and not line.lot_id and not line.lot_name
+                lambda line: line.product_id.tracking in ('lot', 'serial') and not line.lot_id and not line.lot_name
             )
         products = source_lines.mapped('product_id')
         for product in products.sorted('display_name'):
@@ -162,7 +162,7 @@ class SmartLotCreateWizard(models.TransientModel):
             })
 
         tracked_products = picking.move_line_ids.filtered(
-            lambda line: line.product_id.tracking != 'none'
+            lambda line: line.product_id.tracking in ('lot', 'serial')
         ).mapped('product_id')
         if any(line.product_id not in tracked_products for line in self.line_ids):
             raise ValidationError(_('Every selected product must be a tracked product on this transfer.'))
@@ -263,7 +263,7 @@ class SmartLotCreateWizard(models.TransientModel):
             raise UserError(_('There are no assigned Lots to redistribute on this transfer.'))
 
         tracked_products = picking.move_ids.mapped('product_id').filtered(
-            lambda product: product.tracking != 'none'
+            lambda product: product.tracking in ('lot', 'serial')
         )
         if any(line.product_id not in tracked_products for line in self.line_ids):
             raise ValidationError(_('Every selected product must be a tracked product on this transfer.'))

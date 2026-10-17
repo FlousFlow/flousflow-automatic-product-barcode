@@ -169,7 +169,7 @@ class StockPicking(models.Model):
     def action_generate_print_lot_barcodes(self):
         self.ensure_one()
         lots = self.move_line_ids.filtered(
-            lambda line: line.product_id.tracking != 'none' and line.lot_id
+            lambda line: line.product_id.tracking in ('lot', 'serial') and line.lot_id
         ).mapped('lot_id')
         lots._ensure_smart_barcodes()
         if not lots:
