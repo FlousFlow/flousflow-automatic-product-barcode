@@ -5,10 +5,10 @@ Flous Flow Stock Barcode
 
 | | |
 |---|---|
-| **الإصدار** | 19.0.1.0.0 |
+| **الإصدار** | 20.0.1.0.0 |
 | **الرخصة** | LGPL-3 |
 | **الاعتماديات** | `product` |
-| **التوافق** | Odoo 19 Community & Enterprise، self-hosted، Odoo.sh |
+| **التوافق** | Odoo 20 Community & Enterprise، self-hosted، Odoo.sh |
 
 نظرة عامة
 ---------

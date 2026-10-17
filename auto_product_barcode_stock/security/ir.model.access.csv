@@ -1,6 +1,0 @@
-id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_smart_lot_config_manager,smart.lot.barcode.config manager,model_smart_lot_barcode_config,stock.group_stock_manager,1,1,1,1
-access_smart_lot_backfill_manager,smart.lot.backfill.wizard manager,model_smart_lot_backfill_wizard,stock.group_stock_manager,1,1,1,1
-access_smart_lot_print_user,smart.lot.print.wizard user,model_smart_lot_print_wizard,stock.group_stock_user,1,1,1,1
-access_smart_lot_create_user,smart.lot.create.wizard user,model_smart_lot_create_wizard,stock.group_stock_user,1,1,1,1
-access_smart_lot_create_line_user,smart.lot.create.wizard.line user,model_smart_lot_create_wizard_line,stock.group_stock_user,1,1,1,1

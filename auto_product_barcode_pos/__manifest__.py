@@ -1,6 +1,6 @@
 {
     'name': 'Flous Flow Smart Lot Barcode - POS',
-    'version': '19.0.2.0.0',
+    'version': '20.0.1.0.0',
     'summary': 'Resolve Smart Lot Barcodes in Odoo Community POS',
     'category': 'Point of Sale',
     'author': 'Flous Flow',

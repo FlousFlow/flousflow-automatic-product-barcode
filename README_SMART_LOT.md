@@ -1,4 +1,4 @@
-# Smart Lot Barcode extensions (Odoo 19 Community)
+# Smart Lot Barcode extensions (Odoo 20 Community)
 
 The original `auto_product_barcode` addon remains product-only and keeps its
 existing behavior. Inventory and POS are deliberately optional bridge addons:
@@ -20,10 +20,10 @@ the native Odoo parser. Offline Smart Lot scanning is intentionally not claimed
 as available until a deployment adds an approved local cache and server-side
 reconciliation policy.
 
-Install/update in Odoo 19 with the repository root on `addons_path`:
+Install/update in Odoo 20 with the repository root on `addons_path`:
 
 ```bash
 ./odoo-bin -d <db> -u auto_product_barcode_stock,auto_product_barcode_pos --stop-after-init
 ```
 
-Run the bridge tests with `--test-enable` on a clean Odoo 19 Community database.
+Run the bridge tests with `--test-enable` on a clean Odoo 20 Community database.

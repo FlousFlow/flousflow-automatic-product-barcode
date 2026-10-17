@@ -4,10 +4,10 @@ Automatically generate unique barcodes for products and variants.
 
 | | |
 |---|---|
-| **Version** | 19.0.1.0.0 |
+| **Version** | 20.0.1.0.0 |
 | **License** | LGPL-3 |
 | **Dependencies** | `product` |
-| **Compatibility** | Odoo 19 Community & Enterprise, self-hosted, Odoo.sh |
+| **Compatibility** | Odoo 20 Community & Enterprise, self-hosted, Odoo.sh |
 
 ## Overview
 

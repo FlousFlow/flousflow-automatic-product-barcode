@@ -5,10 +5,10 @@ Automatically generate unique barcodes for products and variants.
 
 | | |
 |---|---|
-| **Version** | 19.0.1.0.0 |
+| **Version** | 20.0.1.0.0 |
 | **License** | LGPL-3 |
 | **Dependencies** | `product` |
-| **Compatibility** | Odoo 19 Community & Enterprise, self-hosted, Odoo.sh |
+| **Compatibility** | Odoo 20 Community & Enterprise, self-hosted, Odoo.sh |
 
 Overview
 --------
@@ -112,7 +112,7 @@ generated after the feature is enabled or after an explicit user action.
 Smart Lot Barcode extensions
 ----------------------------
 
-The repository also contains two optional Odoo 19 Community bridge addons:
+The repository also contains two optional Odoo 20 Community bridge addons:
 ``auto_product_barcode_stock`` generates stable Code 128 identifiers for native
 tracked Lots and prints receipt/Lot/product labels; ``auto_product_barcode_pos``
 resolves those identifiers in POS to the exact product and native Lot. They are

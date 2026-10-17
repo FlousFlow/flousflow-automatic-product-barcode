@@ -24,7 +24,8 @@ patch(BarcodeReader.prototype, {
 patch(ProductScreen.prototype, {
     setup() {
         super.setup(...arguments);
-        useBarcodeReader({ smart_lot: this._barcodeSmartLotAction });
+        // Odoo 20 invokes barcode callbacks without a component context.
+        useBarcodeReader({ smart_lot: this._barcodeSmartLotAction.bind(this) });
     },
 
     async _barcodeProductAction(code) {
@@ -33,20 +34,6 @@ patch(ProductScreen.prototype, {
             return lotLine;
         }
         return super._barcodeProductAction(...arguments);
-    },
-
-    async onPressEnterKey() {
-        const searchWord = this.pos.searchProductWord?.trim();
-        if (searchWord) {
-            const lotLine = await this._barcodeSmartLotAction(searchWord, { silent: true });
-            if (lotLine) {
-                this.pos.searchProductWord = "";
-                this.state.previousSearchWord = "";
-                this.state.currentOffset = 0;
-                return;
-            }
-        }
-        return super.onPressEnterKey(...arguments);
     },
 
     async _barcodeSmartLotAction(code, options = {}) {

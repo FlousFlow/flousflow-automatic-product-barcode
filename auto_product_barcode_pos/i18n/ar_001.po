@@ -3,7 +3,7 @@
 #   * auto_product_barcode_pos
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 19.0\n"
+"Project-Id-Version: Odoo Server 20.0\n"
 "Language: ar_001\n"
 "Language-Team: Arabic\n"
 "Last-Translator: Flous Flow\n"

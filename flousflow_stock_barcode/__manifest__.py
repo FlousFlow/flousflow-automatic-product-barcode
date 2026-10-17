@@ -1,6 +1,6 @@
 {
     'name': 'Flous Flow Stock Barcode',
-    'version': '19.0.2.0.0',
+    'version': '20.0.1.0.0',
     'category': 'Inventory/Barcode',
     'summary': 'Automatically generate unique barcodes for products and variants.',
     'description': """
@@ -42,7 +42,7 @@ silently install Inventory or Point of Sale.
     'license': 'LGPL-3',
     'depends': ['product'],
     'data': [
-        'security/ir.model.access.csv',
+        'security/ir.access.csv',
         'security/barcode_rules.xml',
         'views/res_config_settings_views.xml',
         'views/barcode_config_views.xml',
