@@ -1,5 +1,5 @@
 id,name,model_id,group_id/id,operation,domain
-access_auto_barcode_config_user,auto.barcode.config.user,model_auto_barcode_config,base.group_user,r,
-access_auto_barcode_config_system,auto.barcode.config.system,model_auto_barcode_config,base.group_system,crud,
-access_auto_barcode_generate_wizard_manager,auto.barcode.generate.wizard.manager,model_auto_barcode_generate_wizard,product.group_product_manager,crud,
-access_auto_barcode_generate_wizard_system,auto.barcode.generate.wizard.system,model_auto_barcode_generate_wizard,base.group_system,crud,
+access_auto_barcode_config_user,auto.barcode.config.user,auto.barcode.config,base.group_user,r,"[('company_id', 'in', company_ids)]"
+access_auto_barcode_config_system,auto.barcode.config.system,auto.barcode.config,base.group_system,crud,"[('company_id', 'in', company_ids)]"
+access_auto_barcode_generate_wizard_manager,auto.barcode.generate.wizard.manager,auto.barcode.generate.wizard,product.group_product_manager,crud,
+access_auto_barcode_generate_wizard_system,auto.barcode.generate.wizard.system,auto.barcode.generate.wizard,base.group_system,crud,

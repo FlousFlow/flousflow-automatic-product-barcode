@@ -11,7 +11,6 @@
         <field name="model">stock.lot</field>
         <field name="report_type">qweb-pdf</field>
         <field name="report_name">auto_product_barcode_stock.smart_lot_label</field>
-        <field name="report_file">auto_product_barcode_stock.smart_lot_label</field>
         <field name="paperformat_id" ref="paperformat_smart_lot_50x30"/>
         <field name="binding_model_id" ref="stock.model_stock_lot"/>
         <field name="binding_type">report</field>

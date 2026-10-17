@@ -43,7 +43,6 @@ silently install Inventory or Point of Sale.
     'depends': ['product'],
     'data': [
         'security/ir.access.csv',
-        'security/barcode_rules.xml',
         'views/res_config_settings_views.xml',
         'views/barcode_config_views.xml',
         'wizard/barcode_generate_wizard_views.xml',

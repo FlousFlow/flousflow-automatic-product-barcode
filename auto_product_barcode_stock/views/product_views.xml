@@ -5,7 +5,7 @@
         <field name="model">product.product</field>
         <field name="inherit_id" ref="product.product_product_view_form_normalized"/>
         <field name="arch" type="xml">
-            <xpath expr="//sheet/group[@name='name']" position="after">
+            <xpath expr="//group[@name='name']" position="after">
                 <button name="action_print_lot_barcodes" type="object" string="Print Lot Barcodes"/>
             </xpath>
         </field>
