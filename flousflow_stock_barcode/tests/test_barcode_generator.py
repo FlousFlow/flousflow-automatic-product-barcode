@@ -163,6 +163,26 @@ class TestAutoProductBarcode(TransactionCase):
         product_c = self._create_product(name='C')
         self.assertEqual(product_c.barcode, '200000000003')
 
+    def test_12b_skips_more_than_one_hundred_existing_values(self):
+        for number in range(1, 102):
+            self.Product.create({
+                'name': 'Occupied %s' % number,
+                'barcode': '20%010d' % number,
+            })
+
+        product = self._create_product(name='After long collision run')
+
+        self.assertEqual(product.barcode, '200000000102')
+
+    def test_12c_changing_sequence_padding_preserves_progress(self):
+        product = self._create_product(name='Before padding change')
+        self.assertEqual(product.barcode, '200000000001')
+
+        self.config.write({'sequence_digits': 11})
+
+        next_product = self._create_product(name='After padding change')
+        self.assertEqual(next_product.barcode, '2000000000002')
+
     def test_13_ean13_generation(self):
         self.config.write({
             'barcode_format': 'ean13',

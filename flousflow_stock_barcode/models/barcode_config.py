@@ -141,11 +141,15 @@ class AutoBarcodeConfig(models.Model):
         if any(field in vals for field in ('sequence_digits', 'starting_number')):
             for config in self:
                 if config.sequence_id:
-                    config.sequence_id.write({
-                        'padding': config.sequence_digits,
-                        'number_next': config.starting_number,
-                        'number_next_actual': config.starting_number,
-                    })
+                    sequence_vals = {}
+                    if 'sequence_digits' in vals:
+                        sequence_vals['padding'] = config.sequence_digits
+                    if 'starting_number' in vals:
+                        sequence_vals.update({
+                            'number_next': config.starting_number,
+                            'number_next_actual': config.starting_number,
+                        })
+                    config.sequence_id.write(sequence_vals)
         return res
 
     def _format_barcode(self, number_str):
@@ -161,12 +165,23 @@ class AutoBarcodeConfig(models.Model):
         """
         self.ensure_one()
         Product = self.env['product.product']
-        for _attempt in range(100):
+        collision_domain = [
+            '|', ('company_id', '=', False),
+            ('company_id', '=', company.id),
+        ]
+        # Every colliding candidate must already belong to a product visible
+        # to this company. Trying one more distinct sequence value than the
+        # number of such products guarantees room for a free value without an
+        # arbitrary retry ceiling (for example, after imported barcodes or a
+        # sequence that was restarted).
+        max_attempts = Product.with_context(active_test=False).search_count(
+            collision_domain
+        ) + 1
+        for _attempt in range(max_attempts):
             number_str = self.sequence_id.next_by_id()
             code = self._format_barcode(number_str)
             exists = Product.with_context(active_test=False).search_count(
-                [('barcode', '=', code), '|',
-                 ('company_id', '=', False), ('company_id', '=', company.id)],
+                [('barcode', '=', code)] + collision_domain,
                 limit=1)
             if not exists:
                 return code
