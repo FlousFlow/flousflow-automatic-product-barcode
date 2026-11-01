@@ -19,11 +19,12 @@
                         <field name="smart_lot_auto_generate"/>
                     </setting>
                     <setting id="smart_lot_barcode_format_info"
-                             string="Barcode Format"
+                             string="Smart Lot Barcode Format"
                              invisible="not smart_lot_enabled"
-                             help="Smart Lot barcodes use the same format, prefix and sequence as Product Barcodes.">
-                        <div class="text-muted">
-                            Smart Lot labels use the Product Barcode format and sequence.
+                             help="Each Smart Lot barcode includes its product barcode and a unique sequence.">
+                        <div class="content-group">
+                            <field name="smart_lot_prefix"/>
+                            <field name="smart_lot_sequence_digits"/>
                         </div>
                     </setting>
                 </block>

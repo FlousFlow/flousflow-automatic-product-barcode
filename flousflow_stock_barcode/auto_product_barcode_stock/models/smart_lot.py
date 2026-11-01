@@ -44,26 +44,38 @@ class SmartLotBarcodeConfig(models.Model):
                 'use_date_range': False,
             })
 
-    def _next_unique_barcode(self):
+    def write(self, vals):
+        result = super().write(vals)
+        if 'sequence_digits' in vals:
+            for config in self.filtered('sequence_id'):
+                config.sequence_id.write({'padding': config.sequence_digits})
+        return result
+
+    def _next_unique_barcode(self, product):
         self.ensure_one()
-        ProductConfig = self.env['auto.barcode.config']
-        barcode_config = ProductConfig.search([
-            ('company_id', '=', self.company_id.id),
-        ], limit=1)
-        if not barcode_config:
-            barcode_config = ProductConfig.create({
-                'company_id': self.company_id.id,
-                'enabled': False,
-                'barcode_format': 'sequential',
-                'prefix': '',
-                'sequence_digits': 12,
-                'starting_number': 1,
-            })
+        self._ensure_sequence()
+        if not product.barcode:
+            raise UserError(_(
+                'Product %(product)s has no barcode. Generate a product barcode '
+                'before generating its Smart Lot Barcode.',
+                product=product.display_name,
+            ))
+
         Lot = self.env['stock.lot'].with_context(active_test=False)
         Product = self.env['product.product'].with_context(active_test=False)
-        for _attempt in range(100):
-            value = barcode_config._format_barcode(
-                barcode_config.sequence_id.next_by_id())
+        prefix = '%s%s-' % (self.prefix or '', product.barcode)
+        max_attempts = (
+            Lot.search_count([('smart_barcode', '!=', False)])
+            + Product.search_count([('barcode', '!=', False)])
+            + 1
+        )
+        if 'product.packaging' in self.env:
+            max_attempts += self.env['product.packaging'].with_context(
+                active_test=False
+            ).search_count([('barcode', '!=', False)])
+        for _attempt in range(max_attempts):
+            suffix = self.sequence_id.next_by_id()
+            value = '%s%s' % (prefix, suffix)
             if Lot.search_count([('smart_barcode', '=', value)], limit=1):
                 continue
             if Product.search_count([('barcode', '=', value)], limit=1):
@@ -72,7 +84,7 @@ class SmartLotBarcodeConfig(models.Model):
                 if self.env['product.packaging'].search_count([('barcode', '=', value)], limit=1):
                     continue
             return value
-        raise UserError(_('Could not allocate a unique Smart Lot Barcode after 100 attempts.'))
+        raise UserError(_('Could not allocate a unique Smart Lot Barcode.'))
 
 
 class StockLot(models.Model):
@@ -89,10 +101,9 @@ class StockLot(models.Model):
     @api.depends('company_id', 'smart_barcode')
     def _compute_smart_barcode_symbology(self):
         for lot in self:
-            config = self.env['auto.barcode.config'].search([
-                ('company_id', '=', (lot.company_id or self.env.company).id),
-            ], limit=1)
-            lot.smart_barcode_symbology = 'EAN13' if config and config.barcode_format == 'ean13' else 'Code128'
+            # A Smart Lot barcode combines the product barcode with a lot
+            # sequence, so it is not an EAN-13 value even if the product code is.
+            lot.smart_barcode_symbology = 'Code128'
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -101,6 +112,15 @@ class StockLot(models.Model):
         return lots
 
     def _ensure_smart_barcodes(self):
+        missing_product_barcodes = self.filtered(
+            lambda lot: (
+                not lot.product_id.barcode
+                and lot.product_id.tracking in ('lot', 'serial')
+            )
+        ).mapped('product_id')
+        if missing_product_barcodes:
+            missing_product_barcodes._auto_assign_barcode()
+
         company_ids = (self.mapped('company_id') | self.env.company).ids
         configs = self.env['smart.lot.barcode.config'].search([
             ('company_id', 'in', company_ids), ('enabled', '=', True),
@@ -110,11 +130,15 @@ class StockLot(models.Model):
         # Odoo 20 represents untracked products with a false tracking value;
         # only lot- and serial-tracked products can receive Smart Lot labels.
         for lot in self.filtered(
-            lambda r: not r.smart_barcode and r.product_id.tracking in ('lot', 'serial')
+            lambda r: (
+                not r.smart_barcode
+                and r.product_id.barcode
+                and r.product_id.tracking in ('lot', 'serial')
+            )
         ):
             config = by_company.get((lot.company_id or self.env.company).id)
             if config:
-                lot.smart_barcode = config._next_unique_barcode()
+                lot.smart_barcode = config._next_unique_barcode(lot.product_id)
         return self.filtered('smart_barcode')
 
     def action_print_smart_barcode(self):
@@ -200,12 +224,11 @@ class ResConfigSettings(models.TransientModel):
     def get_values(self):
         values = super().get_values()
         config = self.env['smart.lot.barcode.config'].search([('company_id', '=', self.env.company.id)], limit=1)
-        product_config = self.env['auto.barcode.config'].search([('company_id', '=', self.env.company.id)], limit=1)
         values.update({
             'smart_lot_enabled': config.enabled if config else True,
             'smart_lot_auto_generate': config.auto_generate if config else True,
-            'smart_lot_prefix': product_config.prefix if product_config else '',
-            'smart_lot_sequence_digits': product_config.sequence_digits if product_config else 12,
+            'smart_lot_prefix': config.prefix if config else 'FFL-',
+            'smart_lot_sequence_digits': config.sequence_digits if config else 12,
         })
         return values
 

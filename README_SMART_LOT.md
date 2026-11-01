@@ -13,6 +13,11 @@ support are included in the same module:
 * the POS component depends on `point_of_sale` and resolves an `FFL-`
   Smart Lot scan to the native product and native lot name in one POS scan.
 
+Each Smart Lot barcode is composed from the configured Smart Lot prefix, the
+product's barcode, and a unique company sequence (for example,
+`FFL-6221234567895-000001`). If a product has no barcode, its Lot can still be
+created; Smart Lot barcode generation waits until a product barcode is set.
+
 The manufacturer lot name (`stock.lot.name`) and product barcode are never
 overwritten. A receipt action only processes actual assigned move-line lots; it
 does not invent a physical batch split. Re-running generation is idempotent.
