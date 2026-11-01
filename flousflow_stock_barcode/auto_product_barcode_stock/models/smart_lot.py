@@ -179,6 +179,7 @@ class StockLot(models.Model):
             'id': lot.id,
             'name': lot.name,
             'product_id': lot.product_id.id,
+            'product_tmpl_id': lot.product_id.product_tmpl_id.id,
         }
 
 

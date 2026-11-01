@@ -47,12 +47,12 @@ patch(ProductScreen.prototype, {
         const productId = lot.product_id;
         let product = this.pos.models["product.product"].get(productId);
         if (!product) {
-            await this.pos.loadNewProducts([["id", "=", productId]]);
+            await this.pos.loadNewProducts([["id", "=", lot.product_tmpl_id]]);
             product = this.pos.models["product.product"].get(productId);
         }
         if (!product) {
             this.notification.add(_t("The product for this Smart Lot is not available in this POS."), { type: "danger" });
-            return false;
+            return true;
         }
         this.sound.play("beep");
         const line = await this.pos.addLineToCurrentOrder(

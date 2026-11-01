@@ -57,7 +57,7 @@ generation, receipt redistribution, printing, and POS scanning.
     ],
     'assets': {
         'point_of_sale._assets_pos': [
-            'auto_product_barcode_pos/static/src/app/product_screen_smart_lot.js',
+            'flousflow_stock_barcode/static/src/app/product_screen_smart_lot.js',
         ],
     },
     'images': [
