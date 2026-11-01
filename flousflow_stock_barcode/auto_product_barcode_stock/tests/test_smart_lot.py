@@ -1,4 +1,4 @@
-from odoo import Command
+from odoo import Command, fields
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests.common import TransactionCase
 
@@ -72,7 +72,7 @@ class TestSmartLotBarcode(TransactionCase):
             'login': 'smart_lot_pos_cashier',
             'company_id': self.company.id,
             'company_ids': [Command.set([self.company.id])],
-            'groups_id': [Command.set([
+            'group_ids': [Command.set([
                 self.env.ref('base.group_user').id,
                 self.env.ref('point_of_sale.group_pos_user').id,
             ])],
@@ -100,7 +100,7 @@ class TestSmartLotBarcode(TransactionCase):
             'login': 'smart_lot_internal_user',
             'company_id': self.company.id,
             'company_ids': [Command.set([self.company.id])],
-            'groups_id': [Command.set([self.env.ref('base.group_user').id])],
+            'group_ids': [Command.set([self.env.ref('base.group_user').id])],
         })
 
         with self.assertRaises(AccessError):
@@ -127,7 +127,7 @@ class TestSmartLotBarcode(TransactionCase):
             picking_id=type('Record', (), {'id': 2})(),
             company_id=type('Record', (), {'id': 3})(),
             product_id=type('Record', (), {'id': 4})(),
-            product_uom_id=type('Record', (), {'id': 5})(),
+            uom_id=type('Record', (), {'id': 5})(),
             location_id=type('Record', (), {'id': 6})(),
             location_dest_id=type('Record', (), {'id': 7})(),
             owner_id=type('Record', (), {'id': 8})(),
@@ -139,10 +139,119 @@ class TestSmartLotBarcode(TransactionCase):
         values = wizard._partial_move_line_values(move_line, 3.0)
 
         self.assertEqual(values['quantity'], 3.0)
+        self.assertEqual(values['uom_id'], 5)
+        self.assertNotIn('product_uom_id', values)
         self.assertEqual(values['owner_id'], 8)
         self.assertEqual(values['package_id'], 9)
         self.assertEqual(values['result_package_id'], 10)
         self.assertTrue(values['picked'])
+
+    def test_receipt_lot_split_and_redistribution_keep_quantities_and_expiry_dates(self):
+        product = self._product(barcode='PRODUCT-SPLIT-TEST')
+        template = product.product_tmpl_id
+        if 'use_expiration_date' in template._fields:
+            template.write({'use_expiration_date': True, 'expiration_time': 365})
+
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company.id)], limit=1)
+        picking_type = warehouse.in_type_id
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': picking_type.id,
+            'location_id': picking_type.default_location_src_id.id,
+            'location_dest_id': picking_type.default_location_dest_id.id,
+        })
+        move = self.env['stock.move'].create({
+            'description_picking_manual': product.display_name,
+            'product_id': product.id,
+            'uom_id': product.uom_id.id,
+            'product_uom_qty': 10,
+            'location_id': picking.location_id.id,
+            'location_dest_id': picking.location_dest_id.id,
+            'picking_id': picking.id,
+        })
+        self.env['stock.move.line'].create({
+            'picking_id': picking.id,
+            'move_id': move.id,
+            'company_id': self.company.id,
+            'product_id': product.id,
+            'uom_id': product.uom_id.id,
+            'quantity': 10,
+            'location_id': picking.location_id.id,
+            'location_dest_id': picking.location_dest_id.id,
+        })
+
+        wizard = self.env['smart.lot.create.wizard'].create({
+            'picking_id': picking.id,
+            'mode': 'create',
+        })
+        self.env['smart.lot.create.wizard.line'].create([
+            {
+                'wizard_id': wizard.id,
+                'product_id': product.id,
+                'lot_name': 'SUPPLIER-5M',
+                'quantity': 4,
+                'expiration_date': fields.Date.to_date('2027-04-01'),
+            },
+            {
+                'wizard_id': wizard.id,
+                'product_id': product.id,
+                'lot_name': 'SUPPLIER-11M',
+                'quantity': 6,
+                'expiration_date': fields.Date.to_date('2027-10-01'),
+            },
+        ])
+        wizard.action_create_and_print()
+
+        self.assertEqual(
+            sorted((line.lot_id.name, line.quantity) for line in picking.move_line_ids),
+            [('SUPPLIER-11M', 6.0), ('SUPPLIER-5M', 4.0)],
+        )
+        if 'expiration_date' in self.Lot._fields:
+            expirations = {
+                lot.name: fields.Date.to_date(lot.expiration_date)
+                for lot in picking.move_line_ids.mapped('lot_id')
+            }
+            self.assertEqual(expirations['SUPPLIER-5M'], fields.Date.to_date('2027-04-01'))
+            self.assertEqual(expirations['SUPPLIER-11M'], fields.Date.to_date('2027-10-01'))
+
+        redistribute = self.env['smart.lot.create.wizard'].create({
+            'picking_id': picking.id,
+            'mode': 'redistribute',
+        })
+        self.env['smart.lot.create.wizard.line'].create([
+            {
+                'wizard_id': redistribute.id,
+                'product_id': product.id,
+                'lot_name': 'REDISTRIBUTED-3',
+                'quantity': 3,
+                'expiration_date': fields.Date.to_date('2027-05-01'),
+            },
+            {
+                'wizard_id': redistribute.id,
+                'product_id': product.id,
+                'lot_name': 'REDISTRIBUTED-7',
+                'quantity': 7,
+                'expiration_date': fields.Date.to_date('2027-11-01'),
+            },
+        ])
+        redistribute.action_create_and_print()
+
+        redistributed_quantities = {}
+        for line in picking.move_line_ids:
+            redistributed_quantities[line.lot_id.name] = (
+                redistributed_quantities.get(line.lot_id.name, 0.0) + line.quantity
+            )
+        self.assertEqual(
+            redistributed_quantities,
+            {'REDISTRIBUTED-3': 3.0, 'REDISTRIBUTED-7': 7.0},
+        )
+        if 'expiration_date' in self.Lot._fields:
+            expirations = {
+                lot.name: fields.Date.to_date(lot.expiration_date)
+                for lot in picking.move_line_ids.mapped('lot_id')
+            }
+            self.assertEqual(expirations['REDISTRIBUTED-3'], fields.Date.to_date('2027-05-01'))
+            self.assertEqual(expirations['REDISTRIBUTED-7'], fields.Date.to_date('2027-11-01'))
 
     def test_repeated_generation_is_idempotent(self):
         lot = self.Lot.create({'name': 'BATCH-B', 'product_id': self._product().id, 'company_id': self.company.id})

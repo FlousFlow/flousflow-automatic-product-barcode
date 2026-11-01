@@ -2,7 +2,6 @@ import re
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
-from odoo.tools.float_utils import float_compare, float_is_zero
 
 
 class SmartLotBackfillWizard(models.TransientModel):
@@ -141,16 +140,13 @@ class SmartLotCreateWizard(models.TransientModel):
 
     def _validate_lot_lines(self, product, wizard_lines, names):
         if any(
-            float_is_zero(line.quantity, precision_rounding=product.uom_id.rounding)
+            product.uom_id.is_zero(line.quantity)
             or line.quantity < 0
             for line in wizard_lines
         ):
             raise ValidationError(_('Lot quantities must be greater than zero.'))
         if product.tracking == 'serial' and any(
-            float_compare(
-                line.quantity, 1.0,
-                precision_rounding=product.uom_id.rounding,
-            ) != 0
+            product.uom_id.compare(line.quantity, 1.0) != 0
             for line in wizard_lines
         ):
             raise ValidationError(_(
@@ -165,7 +161,7 @@ class SmartLotCreateWizard(models.TransientModel):
             'picking_id': move_line.picking_id.id,
             'company_id': move_line.company_id.id,
             'product_id': move_line.product_id.id,
-            'product_uom_id': move_line.product_uom_id.id,
+            'uom_id': move_line.uom_id.id,
             'location_id': move_line.location_id.id,
             'location_dest_id': move_line.location_dest_id.id,
             'quantity': quantity,
@@ -217,7 +213,7 @@ class SmartLotCreateWizard(models.TransientModel):
             move_lines = self._unassigned_move_lines(product)
             available = sum(move_line.quantity for move_line in move_lines)
             requested = sum(wizard_lines.mapped('quantity'))
-            if float_compare(requested, available, precision_rounding=product.uom_id.rounding) != 0:
+            if product.uom_id.compare(requested, available) != 0:
                 raise ValidationError(_(
                     'The total quantity for %(product)s must be %(available)s; you entered %(requested)s.',
                     product=product.display_name, available=available, requested=requested,
@@ -251,7 +247,7 @@ class SmartLotCreateWizard(models.TransientModel):
                         lot.expiration_date = wizard_line.expiration_date
 
                 quantity_left = wizard_line.quantity
-                while not float_is_zero(quantity_left, precision_rounding=product.uom_id.rounding):
+                while not product.uom_id.is_zero(quantity_left):
                     if cursor >= len(segments):
                         raise ValidationError(_('There is not enough unassigned quantity for %s.') % product.display_name)
                     segment = segments[cursor]
@@ -260,7 +256,7 @@ class SmartLotCreateWizard(models.TransientModel):
                     assigned = min(quantity_left, available_on_line)
                     move_line.write({'lot_id': lot.id, 'quantity': assigned})
                     quantity_left -= assigned
-                    if float_is_zero(available_on_line - assigned, precision_rounding=product.uom_id.rounding):
+                    if product.uom_id.is_zero(available_on_line - assigned):
                         cursor += 1
                     else:
                         remaining_vals = self._partial_move_line_values(
@@ -304,7 +300,7 @@ class SmartLotCreateWizard(models.TransientModel):
             move_lines = picking.move_line_ids.filtered(lambda line: line.product_id == product)
             available = sum(move_line.quantity for move_line in move_lines)
             requested = sum(wizard_lines.mapped('quantity'))
-            if float_compare(requested, available, precision_rounding=product.uom_id.rounding) != 0:
+            if product.uom_id.compare(requested, available) != 0:
                 raise ValidationError(_(
                     'The total quantity for %(product)s must be %(available)s; you entered %(requested)s.',
                     product=product.display_name, available=available, requested=requested,
@@ -340,7 +336,7 @@ class SmartLotCreateWizard(models.TransientModel):
                         lot.expiration_date = wizard_line.expiration_date
 
                 quantity_left = wizard_line.quantity
-                while not float_is_zero(quantity_left, precision_rounding=product.uom_id.rounding):
+                while not product.uom_id.is_zero(quantity_left):
                     if cursor >= len(segments):
                         raise ValidationError(_('There is not enough quantity for %s.') % product.display_name)
                     segment = segments[cursor]
@@ -349,7 +345,7 @@ class SmartLotCreateWizard(models.TransientModel):
                     assigned = min(quantity_left, available_on_line)
                     move_line.write({'lot_id': lot.id, 'quantity': assigned})
                     quantity_left -= assigned
-                    if float_is_zero(available_on_line - assigned, precision_rounding=product.uom_id.rounding):
+                    if product.uom_id.is_zero(available_on_line - assigned):
                         cursor += 1
                     else:
                         remaining_vals = self._partial_move_line_values(
