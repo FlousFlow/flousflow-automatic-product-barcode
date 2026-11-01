@@ -1,3 +1,5 @@
+import datetime
+
 from odoo import Command, fields
 from odoo.exceptions import AccessError, ValidationError
 from odoo.tests.common import TransactionCase
@@ -16,7 +18,15 @@ class TestSmartLotBarcode(TransactionCase):
         cls.Product = cls.env['product.product']
         cls.Lot = cls.env['stock.lot']
         cls.Config = cls.env['smart.lot.barcode.config']
-        cls.config = cls.Config.create({'company_id': cls.company.id, 'prefix': 'FFL-', 'sequence_digits': 6})
+        cls.config = cls.Config.search([('company_id', '=', cls.company.id)], limit=1)
+        if cls.config:
+            cls.config.write({'enabled': True, 'auto_generate': True, 'prefix': 'FFL-', 'sequence_digits': 6})
+        else:
+            cls.config = cls.Config.create({
+                'company_id': cls.company.id,
+                'prefix': 'FFL-',
+                'sequence_digits': 6,
+            })
 
     def _product(self, **vals):
         vals.setdefault('name', 'Tracked Product')
@@ -252,6 +262,103 @@ class TestSmartLotBarcode(TransactionCase):
             }
             self.assertEqual(expirations['REDISTRIBUTED-3'], fields.Date.to_date('2027-05-01'))
             self.assertEqual(expirations['REDISTRIBUTED-7'], fields.Date.to_date('2027-11-01'))
+
+    def test_create_wizard_prefills_remaining_demand_and_product_expiration(self):
+        product = self._product(barcode='PRODUCT-DEFAULT-TEST')
+        template = product.product_tmpl_id
+        if 'use_expiration_date' in template._fields:
+            template.write({'use_expiration_date': True, 'expiration_time': 365})
+
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company.id)], limit=1)
+        picking_type = warehouse.in_type_id
+        scheduled_date = fields.Datetime.to_datetime('2027-01-01 12:00:00')
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': picking_type.id,
+            'location_id': picking_type.default_location_src_id.id,
+            'location_dest_id': picking_type.default_location_dest_id.id,
+            'scheduled_date': scheduled_date,
+        })
+        move = self.env['stock.move'].create({
+            'description_picking_manual': product.display_name,
+            'product_id': product.id,
+            'uom_id': product.uom_id.id,
+            'product_uom_qty': 10,
+            'location_id': picking.location_id.id,
+            'location_dest_id': picking.location_dest_id.id,
+            'picking_id': picking.id,
+        })
+        self.env['stock.move.line'].create({
+            'picking_id': picking.id,
+            'move_id': move.id,
+            'company_id': self.company.id,
+            'product_id': product.id,
+            'uom_id': product.uom_id.id,
+            'quantity': 0,
+            'location_id': picking.location_id.id,
+            'location_dest_id': picking.location_dest_id.id,
+        })
+
+        defaults = self.env['smart.lot.create.wizard'].with_context(
+            default_picking_id=picking.id,
+        ).default_get(['picking_id', 'line_ids'])
+
+        self.assertEqual(defaults['picking_id'], picking.id)
+        self.assertEqual(len(defaults['line_ids']), 1)
+        line_values = defaults['line_ids'][0][2]
+        self.assertEqual(line_values['product_id'], product.id)
+        self.assertEqual(line_values['quantity'], 10)
+        if 'use_expiration_date' in template._fields:
+            self.assertEqual(
+                line_values['expiration_date'],
+                fields.Date.to_date(picking.scheduled_date) + datetime.timedelta(days=365),
+            )
+
+    def test_create_wizard_assigns_quantity_when_receipt_line_is_zero(self):
+        product = self._product(barcode='PRODUCT-ZERO-LINE-TEST')
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company.id)], limit=1)
+        picking_type = warehouse.in_type_id
+        picking = self.env['stock.picking'].create({
+            'picking_type_id': picking_type.id,
+            'location_id': picking_type.default_location_src_id.id,
+            'location_dest_id': picking_type.default_location_dest_id.id,
+        })
+        move = self.env['stock.move'].create({
+            'description_picking_manual': product.display_name,
+            'product_id': product.id,
+            'uom_id': product.uom_id.id,
+            'product_uom_qty': 10,
+            'location_id': picking.location_id.id,
+            'location_dest_id': picking.location_dest_id.id,
+            'picking_id': picking.id,
+        })
+        self.env['stock.move.line'].create({
+            'picking_id': picking.id,
+            'move_id': move.id,
+            'company_id': self.company.id,
+            'product_id': product.id,
+            'uom_id': product.uom_id.id,
+            'quantity': 0,
+            'location_id': picking.location_id.id,
+            'location_dest_id': picking.location_dest_id.id,
+        })
+        wizard = self.env['smart.lot.create.wizard'].create({
+            'picking_id': picking.id,
+        })
+        self.env['smart.lot.create.wizard.line'].create({
+            'wizard_id': wizard.id,
+            'product_id': product.id,
+            'lot_name': 'SUPPLIER-PARTIAL',
+            'quantity': 4,
+        })
+
+        wizard.action_create_and_print()
+
+        self.assertEqual(move.quantity, 4)
+        self.assertEqual(len(picking.move_line_ids), 1)
+        self.assertEqual(picking.move_line_ids.lot_id.name, 'SUPPLIER-PARTIAL')
+        self.assertEqual(picking.move_line_ids.quantity, 4)
 
     def test_repeated_generation_is_idempotent(self):
         lot = self.Lot.create({'name': 'BATCH-B', 'product_id': self._product().id, 'company_id': self.company.id})

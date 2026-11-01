@@ -279,6 +279,14 @@ msgid "Quantity"
 msgstr "الكمية"
 
 #. module: flousflow_stock_barcode
+msgid "One row is prefilled per tracked product with its remaining receipt quantity. Add another row for each additional lot or expiry date, then split the quantity across rows."
+msgstr "يُجهّز النظام سطرًا لكل منتج متتبّع بالكمية المتبقية في الاستلام. أضف سطرًا لكل تشغيلة أو تاريخ صلاحية إضافي، ثم وزّع الكمية على السطور."
+
+#. module: flousflow_stock_barcode
+msgid "Defaults from the product's expiration settings when configured; you can change it for the received batch."
+msgstr "يُحدَّد افتراضيًا من إعدادات صلاحية المنتج عند تفعيلها، ويمكنك تغييره حسب الدفعة المستلمة."
+
+#. module: flousflow_stock_barcode
 msgid "Generate Missing Smart Lot Barcodes"
 msgstr "توليد باركودات التشغيلات الذكية الناقصة"
 

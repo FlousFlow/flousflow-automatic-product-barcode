@@ -1,4 +1,5 @@
 import re
+import datetime
 
 from odoo import Command, _, api, fields, models
 from odoo.exceptions import UserError, ValidationError
@@ -81,6 +82,19 @@ class SmartLotCreateWizard(models.TransientModel):
                 lambda product: product.tracking in ('lot', 'serial')
             ) if wizard.picking_id else self.env['product.product']
 
+    def _default_expiration_date(self, product, picking=None):
+        picking = picking or self.picking_id
+        if not picking:
+            return False
+        if not {'use_expiration_date', 'expiration_time'} <= product._fields.keys():
+            return False
+        if not product.use_expiration_date:
+            return False
+        receipt_date = fields.Datetime.to_datetime(picking.scheduled_date) or fields.Datetime.now()
+        return fields.Date.to_date(
+            receipt_date + datetime.timedelta(days=product.expiration_time)
+        )
+
     @api.model
     def default_get(self, fields_list):
         values = super().default_get(fields_list)
@@ -95,24 +109,65 @@ class SmartLotCreateWizard(models.TransientModel):
             source_lines = picking.move_line_ids.filtered(
                 lambda line: line.product_id.tracking in ('lot', 'serial') and line.lot_id
             )
-        else:
-            source_lines = picking.move_line_ids.filtered(
-                lambda line: line.product_id.tracking in ('lot', 'serial') and not line.lot_id and not line.lot_name
-            )
-        products = source_lines.mapped('product_id')
-        for product in products.sorted('display_name'):
-            product_lines = source_lines.filtered(lambda line: line.product_id == product)
-            for source_line in product_lines:
+            for source_line in source_lines:
                 values_line = {
-                    'product_id': product.id,
+                    'product_id': source_line.product_id.id,
                     'quantity': source_line.quantity,
+                    'lot_name': source_line.lot_id.name,
                 }
-                if mode == 'redistribute':
+                if source_line.lot_id.expiration_date:
                     values_line.update({
-                        'lot_name': source_line.lot_id.name,
-                        'expiration_date': source_line.lot_id.expiration_date,
+                        'expiration_date': fields.Date.to_date(source_line.lot_id.expiration_date),
                     })
                 commands.append(Command.create(values_line))
+        else:
+            moves = picking.move_ids.filtered(
+                lambda move: move.product_id.tracking in ('lot', 'serial')
+            )
+            products = moves.mapped('product_id')
+            for product in products.sorted('display_name'):
+                product_moves = moves.filtered(lambda move: move.product_id == product)
+                unassigned_lines = product_moves.move_line_ids.filtered(
+                    lambda line: not line.lot_id and not line.lot_name
+                )
+                quantity = sum(
+                    line.uom_id._compute_quantity(line.quantity, product.uom_id, round=False)
+                    for line in unassigned_lines
+                )
+                if product.uom_id.is_zero(quantity):
+                    quantity = sum(
+                        max(
+                            move.uom_id._compute_quantity(move.product_uom_qty, product.uom_id, round=False)
+                            - move.uom_id._compute_quantity(move.quantity, product.uom_id, round=False),
+                            0.0,
+                        )
+                        for move in product_moves
+                    )
+                if product.uom_id.is_zero(quantity):
+                    continue
+
+                values_line = {'product_id': product.id, 'quantity': quantity}
+                expiry_dates = set()
+                if 'expiration_date' in self.env['stock.move.line']._fields:
+                    expiry_dates = {
+                        fields.Date.to_date(line.expiration_date)
+                        for line in unassigned_lines if line.expiration_date
+                    }
+                if len(expiry_dates) == 1:
+                    default_expiration = expiry_dates.pop()
+                else:
+                    default_expiration = self._default_expiration_date(product, picking) if not expiry_dates else False
+                if default_expiration:
+                    values_line['expiration_date'] = default_expiration
+
+                row_quantities = [quantity]
+                if product.tracking == 'serial':
+                    whole_quantity = round(quantity)
+                    if product.uom_id.compare(quantity, whole_quantity) == 0:
+                        row_quantities = [1.0] * int(whole_quantity)
+                for row_quantity in row_quantities:
+                    row_values = dict(values_line, quantity=row_quantity)
+                    commands.append(Command.create(row_values))
         values['line_ids'] = commands
         return values
 
@@ -211,8 +266,49 @@ class SmartLotCreateWizard(models.TransientModel):
             self._validate_lot_lines(product, wizard_lines, names)
 
             move_lines = self._unassigned_move_lines(product)
-            available = sum(move_line.quantity for move_line in move_lines)
             requested = sum(wizard_lines.mapped('quantity'))
+            available = sum(
+                move_line.uom_id._compute_quantity(move_line.quantity, product.uom_id, round=False)
+                for move_line in move_lines
+            )
+            if product.uom_id.is_zero(available):
+                # Draft receipts can have demand lines with zero done quantity. Let
+                # the lot allocation set the received quantity entered in the wizard.
+                quantity_left = requested
+                for move in picking.move_ids.filtered(lambda candidate: candidate.product_id == product):
+                    assigned_quantity = sum(
+                        line.uom_id._compute_quantity(line.quantity, product.uom_id, round=False)
+                        for line in move.move_line_ids
+                        if line.lot_id or line.lot_name
+                    )
+                    demand = move.uom_id._compute_quantity(move.product_uom_qty, product.uom_id, round=False)
+                    capacity = max(demand - assigned_quantity, 0.0)
+                    allocated = min(quantity_left, capacity)
+                    if product.uom_id.is_zero(allocated):
+                        continue
+                    move.quantity = move.quantity + product.uom_id._compute_quantity(
+                        allocated, move.uom_id, round=False,
+                    )
+                    quantity_left -= allocated
+                    if product.uom_id.is_zero(quantity_left):
+                        break
+                if not product.uom_id.is_zero(quantity_left):
+                    raise ValidationError(_(
+                        'The lot quantities exceed the remaining demand for %(product)s.',
+                        product=product.display_name,
+                    ))
+                move_lines = self._unassigned_move_lines(product)
+                empty_lines = move_lines.filtered(
+                    lambda line: product.uom_id.is_zero(
+                        line.uom_id._compute_quantity(line.quantity, product.uom_id, round=False)
+                    )
+                )
+                empty_lines.unlink()
+                move_lines -= empty_lines
+                available = sum(
+                    move_line.uom_id._compute_quantity(move_line.quantity, product.uom_id, round=False)
+                    for move_line in move_lines
+                )
             if product.uom_id.compare(requested, available) != 0:
                 raise ValidationError(_(
                     'The total quantity for %(product)s must be %(available)s; you entered %(requested)s.',
@@ -220,7 +316,12 @@ class SmartLotCreateWizard(models.TransientModel):
                 ))
 
             segments = [
-                {'line': move_line, 'remaining': move_line.quantity}
+                {
+                    'line': move_line,
+                    'remaining': move_line.uom_id._compute_quantity(
+                        move_line.quantity, product.uom_id, round=False,
+                    ),
+                }
                 for move_line in move_lines
             ]
             cursor = 0
@@ -235,8 +336,10 @@ class SmartLotCreateWizard(models.TransientModel):
                         'product_id': product.id,
                         'company_id': picking.company_id.id,
                     }
-                    if 'expiration_date' in self.env['stock.lot']._fields and wizard_line.expiration_date:
-                        lot_vals['expiration_date'] = wizard_line.expiration_date
+                    if 'expiration_date' in self.env['stock.lot']._fields:
+                        expiration_date = wizard_line.expiration_date or self._default_expiration_date(product)
+                        if expiration_date:
+                            lot_vals['expiration_date'] = expiration_date
                     lot = self.env['stock.lot'].create(lot_vals)
                 elif wizard_line.expiration_date and 'expiration_date' in lot._fields:
                     if lot.expiration_date and fields.Date.to_date(lot.expiration_date) != fields.Date.to_date(wizard_line.expiration_date):
@@ -254,21 +357,42 @@ class SmartLotCreateWizard(models.TransientModel):
                     move_line = segment['line']
                     available_on_line = segment['remaining']
                     assigned = min(quantity_left, available_on_line)
-                    move_line.write({'lot_id': lot.id, 'quantity': assigned})
-                    quantity_left -= assigned
-                    if product.uom_id.is_zero(available_on_line - assigned):
+                    assigned_in_line_uom = product.uom_id._compute_quantity(
+                        assigned, move_line.uom_id, round=False,
+                    )
+                    move_line.write({'lot_id': lot.id, 'quantity': assigned_in_line_uom})
+                    quantity_left -= move_line.uom_id._compute_quantity(
+                        assigned_in_line_uom, product.uom_id, round=False,
+                    )
+                    remaining_on_line = available_on_line - assigned
+                    if product.uom_id.is_zero(remaining_on_line):
                         cursor += 1
                     else:
                         remaining_vals = self._partial_move_line_values(
-                            move_line, available_on_line - assigned,
+                            move_line,
+                            product.uom_id._compute_quantity(
+                                remaining_on_line, move_line.uom_id, round=False,
+                            ),
                         )
                         remaining_line = self.env['stock.move.line'].create(remaining_vals)
                         segments.insert(cursor + 1, {
                             'line': remaining_line,
-                            'remaining': available_on_line - assigned,
+                            'remaining': remaining_on_line,
                         })
                         cursor += 1
                 lots |= lot
+
+            empty_lines = picking.move_line_ids.filtered(
+                lambda line: (
+                    line.product_id == product
+                    and not line.lot_id
+                    and not line.lot_name
+                    and product.uom_id.is_zero(
+                        line.uom_id._compute_quantity(line.quantity, product.uom_id, round=False)
+                    )
+                )
+            )
+            empty_lines.unlink()
 
         lots._ensure_smart_barcodes()
         return self.env.ref('flousflow_stock_barcode.action_smart_lot_label').report_action(lots)

@@ -20,6 +20,10 @@
                     <field name="picking_id"/>
                     <field name="mode" invisible="1"/>
                 </group>
+                <div class="alert alert-info" role="alert" invisible="mode != 'create'">
+                    One row is prefilled per tracked product with its remaining receipt quantity.
+                    Add another row for each additional lot or expiry date, then split the quantity across rows.
+                </div>
                 <field name="line_ids">
                     <list editable="bottom">
                         <field name="allowed_product_ids" column_invisible="True"/>
@@ -27,7 +31,8 @@
                         <field name="lot_name" string="Manufacturer Lot/Batch (optional)"
                                placeholder="Leave blank for automatic Lot"/>
                         <field name="quantity"/>
-                        <field name="expiration_date"/>
+                        <field name="expiration_date"
+                               help="Defaults from the product's expiration settings when configured; you can change it for the received batch."/>
                     </list>
                 </field>
                 <footer>
