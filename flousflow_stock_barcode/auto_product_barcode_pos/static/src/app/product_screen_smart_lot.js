@@ -28,37 +28,23 @@ patch(ProductScreen.prototype, {
         useBarcodeReader({ smart_lot: this._barcodeSmartLotAction.bind(this) });
     },
 
-    async _barcodeProductAction(code) {
-        const lotLine = await this._barcodeSmartLotAction(code, { silent: true });
-        if (lotLine) {
-            return lotLine;
-        }
-        return super._barcodeProductAction(...arguments);
-    },
-
-    async _barcodeSmartLotAction(code, options = {}) {
+    async _barcodeSmartLotAction(code) {
         const raw = typeof code === "string" ? code : code?.code || code?.base_code || "";
-        let rows;
+        let lot;
         try {
-            rows = await this.pos.data.searchRead(
+            lot = await this.pos.data.call(
                 "stock.lot",
-                [["smart_barcode", "=", raw], ["company_id", "=", this.pos.company.id]],
-                ["id", "name", "product_id", "smart_barcode"]
+                "pos_resolve_smart_barcode",
+                [raw, this.pos.company.id]
             );
         } catch {
-            if (!options.silent) {
-                this.notification.add(_t("Smart Lot lookup is unavailable. The scan was rejected."), { type: "danger" });
-            }
-            return false;
+            this.notification.add(_t("Smart Lot lookup is unavailable. The scan was rejected."), { type: "danger" });
+            return true;
         }
-        const lot = rows?.[0];
         if (!lot) {
-            if (!options.silent) {
-                this.notification.add(_t("The Smart Lot Barcode is unknown or belongs to another company."), { type: "danger" });
-            }
             return false;
         }
-        const productId = Array.isArray(lot.product_id) ? lot.product_id[0] : lot.product_id;
+        const productId = lot.product_id;
         let product = this.pos.models["product.product"].get(productId);
         if (!product) {
             await this.pos.loadNewProducts([["id", "=", productId]]);

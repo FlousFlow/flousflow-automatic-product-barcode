@@ -32,12 +32,12 @@ class SmartLotBackfillWizard(models.TransientModel):
         if not config or not config.enabled:
             raise UserError(_('Enable Smart Lot Barcodes for this company first.'))
         lots = self.env['stock.lot'].with_context(active_test=not self.include_archived).search(self._domain())
-        lots._ensure_smart_barcodes()
+        generated = lots._ensure_smart_barcodes()
         return {
             'type': 'ir.actions.client', 'tag': 'display_notification',
             'params': {'title': _('Smart Lot Barcodes'),
-                       'message': _('%s missing barcode(s) generated.', len(lots)),
-                       'type': 'success' if lots else 'info', 'sticky': False},
+                       'message': _('%s Smart Lot barcode(s) generated.', len(generated)),
+                       'type': 'success' if generated else 'info', 'sticky': False},
         }
 
 
@@ -139,6 +139,44 @@ class SmartLotCreateWizard(models.TransientModel):
                 return candidate
         raise UserError(_('Could not generate an internal Lot name for %s.') % product.display_name)
 
+    def _validate_lot_lines(self, product, wizard_lines, names):
+        if any(
+            float_is_zero(line.quantity, precision_rounding=product.uom_id.rounding)
+            or line.quantity < 0
+            for line in wizard_lines
+        ):
+            raise ValidationError(_('Lot quantities must be greater than zero.'))
+        if product.tracking == 'serial' and any(
+            float_compare(
+                line.quantity, 1.0,
+                precision_rounding=product.uom_id.rounding,
+            ) != 0
+            for line in wizard_lines
+        ):
+            raise ValidationError(_(
+                'Serial-tracked products require exactly one unit per serial number.'
+            ))
+        if len(names) != len(set(names)):
+            raise ValidationError(_('The same Lot/Batch cannot be repeated for one product.'))
+
+    def _partial_move_line_values(self, move_line, quantity):
+        values = {
+            'move_id': move_line.move_id.id,
+            'picking_id': move_line.picking_id.id,
+            'company_id': move_line.company_id.id,
+            'product_id': move_line.product_id.id,
+            'product_uom_id': move_line.product_uom_id.id,
+            'location_id': move_line.location_id.id,
+            'location_dest_id': move_line.location_dest_id.id,
+            'quantity': quantity,
+        }
+        for field_name in ('owner_id', 'package_id', 'result_package_id'):
+            if field_name in move_line._fields and move_line[field_name]:
+                values[field_name] = move_line[field_name].id
+        if 'picked' in move_line._fields:
+            values['picked'] = move_line.picked
+        return values
+
     def action_create_and_print(self):
         self.ensure_one()
         if self.mode == 'redistribute':
@@ -170,14 +208,11 @@ class SmartLotCreateWizard(models.TransientModel):
         lots = self.env['stock.lot']
         for product in self.line_ids.mapped('product_id'):
             wizard_lines = self.line_ids.filtered(lambda line: line.product_id == product)
-            if any(float_is_zero(line.quantity, precision_rounding=product.uom_id.rounding) or line.quantity < 0 for line in wizard_lines):
-                raise ValidationError(_('Lot quantities must be greater than zero.'))
             names = []
             for line in wizard_lines:
                 name = (line.lot_name or '').strip() or self._next_internal_lot_name(product, names)
                 names.append(name)
-            if len(names) != len(set(names)):
-                raise ValidationError(_('The same Lot/Batch cannot be repeated for one product.'))
+            self._validate_lot_lines(product, wizard_lines, names)
 
             move_lines = self._unassigned_move_lines(product)
             available = sum(move_line.quantity for move_line in move_lines)
@@ -228,19 +263,9 @@ class SmartLotCreateWizard(models.TransientModel):
                     if float_is_zero(available_on_line - assigned, precision_rounding=product.uom_id.rounding):
                         cursor += 1
                     else:
-                        remaining_vals = {
-                            'move_id': move_line.move_id.id,
-                            'picking_id': picking.id,
-                            'company_id': picking.company_id.id,
-                            'product_id': product.id,
-                            'product_uom_id': move_line.product_uom_id.id,
-                            'location_id': move_line.location_id.id,
-                            'location_dest_id': move_line.location_dest_id.id,
-                            'quantity': available_on_line - assigned,
-                        }
-                        for field_name in ('owner_id', 'package_id', 'result_package_id'):
-                            if field_name in move_line._fields and move_line[field_name]:
-                                remaining_vals[field_name] = move_line[field_name].id
+                        remaining_vals = self._partial_move_line_values(
+                            move_line, available_on_line - assigned,
+                        )
                         remaining_line = self.env['stock.move.line'].create(remaining_vals)
                         segments.insert(cursor + 1, {
                             'line': remaining_line,
@@ -271,13 +296,10 @@ class SmartLotCreateWizard(models.TransientModel):
         lots = self.env['stock.lot']
         for product in self.line_ids.mapped('product_id'):
             wizard_lines = self.line_ids.filtered(lambda line: line.product_id == product)
-            if any(float_is_zero(line.quantity, precision_rounding=product.uom_id.rounding) or line.quantity < 0 for line in wizard_lines):
-                raise ValidationError(_('Lot quantities must be greater than zero.'))
             names = []
             for line in wizard_lines:
                 names.append((line.lot_name or '').strip() or self._next_internal_lot_name(product, names))
-            if len(names) != len(set(names)):
-                raise ValidationError(_('The same Lot/Batch cannot be repeated for one product.'))
+            self._validate_lot_lines(product, wizard_lines, names)
 
             move_lines = picking.move_line_ids.filtered(lambda line: line.product_id == product)
             available = sum(move_line.quantity for move_line in move_lines)
@@ -330,19 +352,9 @@ class SmartLotCreateWizard(models.TransientModel):
                     if float_is_zero(available_on_line - assigned, precision_rounding=product.uom_id.rounding):
                         cursor += 1
                     else:
-                        remaining_vals = {
-                            'move_id': move_line.move_id.id,
-                            'picking_id': picking.id,
-                            'company_id': picking.company_id.id,
-                            'product_id': product.id,
-                            'product_uom_id': move_line.product_uom_id.id,
-                            'location_id': move_line.location_id.id,
-                            'location_dest_id': move_line.location_dest_id.id,
-                            'quantity': available_on_line - assigned,
-                        }
-                        for field_name in ('owner_id', 'package_id', 'result_package_id'):
-                            if field_name in move_line._fields and move_line[field_name]:
-                                remaining_vals[field_name] = move_line[field_name].id
+                        remaining_vals = self._partial_move_line_values(
+                            move_line, available_on_line - assigned,
+                        )
                         remaining_line = self.env['stock.move.line'].create(remaining_vals)
                         segments.insert(cursor + 1, {
                             'line': remaining_line,

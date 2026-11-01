@@ -1,5 +1,5 @@
 from odoo import _, api, fields, models
-from odoo.exceptions import UserError, ValidationError
+from odoo.exceptions import AccessError, UserError, ValidationError
 
 
 class SmartLotBarcodeConfig(models.Model):
@@ -108,24 +108,17 @@ class StockLot(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         lots = super().create(vals_list)
-        lots._ensure_smart_barcodes()
+        lots._ensure_smart_barcodes(automatic=True)
         return lots
 
-    def _ensure_smart_barcodes(self):
-        missing_product_barcodes = self.filtered(
-            lambda lot: (
-                not lot.product_id.barcode
-                and lot.product_id.tracking in ('lot', 'serial')
-            )
-        ).mapped('product_id')
-        if missing_product_barcodes:
-            missing_product_barcodes._auto_assign_barcode()
-
+    def _ensure_smart_barcodes(self, automatic=False):
         company_ids = (self.mapped('company_id') | self.env.company).ids
-        configs = self.env['smart.lot.barcode.config'].search([
+        config_domain = [
             ('company_id', 'in', company_ids), ('enabled', '=', True),
-            ('auto_generate', '=', True),
-        ])
+        ]
+        if automatic:
+            config_domain.append(('auto_generate', '=', True))
+        configs = self.env['smart.lot.barcode.config'].search(config_domain)
         by_company = {config.company_id.id: config for config in configs}
         # Odoo 20 represents untracked products with a false tracking value;
         # only lot- and serial-tracked products can receive Smart Lot labels.
@@ -158,6 +151,34 @@ class StockLot(models.Model):
             'product_name': lot.product_id.display_name,
             'company_id': lot.company_id.id,
             'expiration_date': getattr(lot, 'expiration_date', False),
+        }
+
+    @api.model
+    def pos_resolve_smart_barcode(self, barcode, company_id):
+        """Resolve one Smart Lot barcode for an authorized POS company.
+
+        POS cashiers are not necessarily stock users, so expose only the
+        minimal lot data needed by POS after checking their group and company.
+        """
+        if not self.env.user.has_group('point_of_sale.group_pos_user'):
+            raise AccessError(_('Only Point of Sale users can resolve Smart Lot barcodes.'))
+        if not isinstance(barcode, str) or not barcode:
+            return False
+        if not isinstance(company_id, int) or isinstance(company_id, bool):
+            return False
+        company = self.env['res.company'].browse(company_id).exists()
+        if len(company) != 1 or company not in self.env.companies:
+            return False
+        lot = self.sudo().search([
+            ('smart_barcode', '=', barcode),
+            ('company_id', '=', company.id),
+        ], limit=1)
+        if not lot:
+            return False
+        return {
+            'id': lot.id,
+            'name': lot.name,
+            'product_id': lot.product_id.id,
         }
 
 
