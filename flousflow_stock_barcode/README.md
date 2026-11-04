@@ -24,7 +24,8 @@ field is created, and `product.template` is never given an independent value.
 1. Copy the `flousflow_stock_barcode` folder into an addons path. This is the
    only installable module in the repository; it includes Inventory, Sales,
    and POS Smart Lot barcode support, including delivery reservation of a Lot
-   scanned on a Sales Order.
+   scanned on a Sales Order. Lot selection is retained when the code is
+   resolved through the Sales product autocomplete.
 2. Install the "Flous Flow Stock Barcode" module from the Apps menu.
 3. Upgrade with the standard command:
 

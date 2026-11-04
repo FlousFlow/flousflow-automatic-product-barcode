@@ -24,9 +24,25 @@ patch(SaleLabelTextField.prototype, {
     },
 
     async updateMany2XProduct(record) {
+        let smartLotId = record.smartLotId;
+        const scannedCode = this.getFirstLine(this.textareaRef()?.value).trim();
+        if (!smartLotId && scannedCode.length >= MIN_SCANNED_CODE_LENGTH) {
+            try {
+                const result = await this.orm.call(
+                    "product.template",
+                    "resolve_sale_lot_scan",
+                    [scannedCode]
+                );
+                if (result?.id === record.id) {
+                    smartLotId = result.lot_id;
+                }
+            } catch {
+                // Keep normal product selection working if Lot resolution is unavailable.
+            }
+        }
         await super.updateMany2XProduct(...arguments);
         await this.props.record.update({
-            preferred_lot_id: record.smartLotId ? { id: record.smartLotId } : false,
+            preferred_lot_id: smartLotId ? { id: smartLotId } : false,
         });
     },
 

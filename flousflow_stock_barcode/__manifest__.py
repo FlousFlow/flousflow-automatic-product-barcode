@@ -1,6 +1,6 @@
 {
     'name': 'Flous Flow Automatic Product & Lot Barcode',
-    'version': '20.0.1.0.0',
+    'version': '20.0.1.0.1',
     'category': 'Inventory/Barcode',
     'summary': 'Generate product and Smart Lot barcodes for Inventory and POS.',
     'description': """
