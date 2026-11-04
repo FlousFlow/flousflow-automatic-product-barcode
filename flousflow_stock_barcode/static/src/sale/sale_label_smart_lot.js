@@ -23,6 +23,13 @@ patch(SaleLabelTextField.prototype, {
         return super.onLabelInput(...args);
     },
 
+    async updateMany2XProduct(record) {
+        await super.updateMany2XProduct(...arguments);
+        await this.props.record.update({
+            preferred_lot_id: record.smartLotId ? { id: record.smartLotId } : false,
+        });
+    },
+
     onLabelKeydown(ev) {
         if (ev.target !== this.textareaRef() || ev.ctrlKey || ev.metaKey || ev.altKey) {
             this._resetSmartLotScanBuffer();
@@ -76,13 +83,12 @@ patch(SaleLabelTextField.prototype, {
     async _resolveSmartLotBarcode(barcode) {
         this.smartLotScanPending = true;
         try {
-            const products = await this.orm.call("product.template", "name_search", [], {
-                name: barcode,
-                domain: this.productDomain,
-                operator: "=",
-                limit: 1,
-            });
-            if (!products.length) {
+            const result = await this.orm.call(
+                "product.template",
+                "resolve_sale_lot_scan",
+                [barcode]
+            );
+            if (!result) {
                 this.smartLotNotification.add(
                     _t("No saleable product matches this Lot barcode."),
                     { type: "warning" }
@@ -91,7 +97,11 @@ patch(SaleLabelTextField.prototype, {
                 return;
             }
             await this.onMany2XUpdate([
-                { id: products[0][0], display_name: products[0][1] },
+                {
+                    id: result.id,
+                    display_name: result.display_name,
+                    smartLotId: result.lot_id,
+                },
             ]);
         } catch {
             this.smartLotNotification.add(

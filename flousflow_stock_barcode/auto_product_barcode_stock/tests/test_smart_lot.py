@@ -122,6 +122,11 @@ class TestSmartLotBarcode(TransactionCase):
             template_result,
             [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
         )
+        resolved_scan = self.env['product.template'].resolve_sale_lot_scan(
+            lot.smart_barcode,
+        )
+        self.assertEqual(resolved_scan['lot_id'], lot.id)
+        self.assertEqual(resolved_scan['id'], product.product_tmpl_id.id)
 
         lot_name_result = self.env['product.template'].name_search(
             name=lot.name,
@@ -140,6 +145,12 @@ class TestSmartLotBarcode(TransactionCase):
         self.assertEqual(
             truncated_lot_name_result,
             [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
+        )
+        self.assertEqual(
+            self.env['product.template'].resolve_sale_lot_scan(
+                'FULLFLOW-LOT-PRODUCT-000002',
+            )['lot_id'],
+            lot.id,
         )
 
         excluded_result = self.Product.name_search(
@@ -166,6 +177,108 @@ class TestSmartLotBarcode(TransactionCase):
             name=lot.name,
             domain=[('sale_ok', '=', True)],
             operator='=',
+        ))
+        self.assertFalse(
+            self.env['product.template'].resolve_sale_lot_scan(lot.name)
+        )
+
+    def _confirm_sale_for_lot(self, product, lot, quantity):
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company.id)], limit=1,
+        )
+        partner = self.env['res.partner'].create({
+            'name': 'Smart Lot Sale Customer',
+        })
+        order = self.env['sale.order'].create({
+            'partner_id': partner.id,
+            'company_id': self.company.id,
+            'warehouse_id': warehouse.id,
+            'order_line': [Command.create({
+                'product_id': product.id,
+                'product_uom_qty': quantity,
+                'product_uom_id': product.uom_id.id,
+                'price_unit': 10,
+                'preferred_lot_id': lot.id,
+            })],
+        })
+        order.action_confirm()
+        return order
+
+    def test_sales_scan_reserves_the_selected_lot_on_delivery(self):
+        product = self._product(name='Selected Delivery Lot Product')
+        scanned_lot = self.Lot.create({
+            'name': 'SCAN-DELIVERY-LOT',
+            'product_id': product.id,
+            'company_id': self.company.id,
+        })
+        older_lot = self.Lot.create({
+            'name': 'OLDER-DELIVERY-LOT',
+            'product_id': product.id,
+            'company_id': self.company.id,
+        })
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company.id)], limit=1,
+        )
+        Quant = self.env['stock.quant']
+        Quant._update_available_quantity(
+            product, warehouse.lot_stock_id, 12, lot_id=scanned_lot,
+        )
+        Quant._update_available_quantity(
+            product, warehouse.lot_stock_id, 20, lot_id=older_lot,
+        )
+
+        order = self._confirm_sale_for_lot(product, scanned_lot, 10)
+        move = order.order_line.move_ids
+
+        self.assertEqual(move.preferred_lot_id, scanned_lot)
+        self.assertEqual(move.move_line_ids.lot_id, scanned_lot)
+        self.assertEqual(sum(move.move_line_ids.mapped('quantity')), 10)
+
+    def test_sales_lot_shortage_keeps_other_lots_for_backorder(self):
+        product = self._product(name='Partial Delivery Lot Product')
+        scanned_lot = self.Lot.create({
+            'name': 'SHORT-SCANNED-LOT',
+            'product_id': product.id,
+            'company_id': self.company.id,
+        })
+        other_lot = self.Lot.create({
+            'name': 'DO-NOT-SUBSTITUTE-LOT',
+            'product_id': product.id,
+            'company_id': self.company.id,
+        })
+        warehouse = self.env['stock.warehouse'].search(
+            [('company_id', '=', self.company.id)], limit=1,
+        )
+        Quant = self.env['stock.quant']
+        Quant._update_available_quantity(
+            product, warehouse.lot_stock_id, 3, lot_id=scanned_lot,
+        )
+        Quant._update_available_quantity(
+            product, warehouse.lot_stock_id, 20, lot_id=other_lot,
+        )
+
+        order = self._confirm_sale_for_lot(product, scanned_lot, 10)
+        picking = order.picking_ids
+        move = order.order_line.move_ids
+
+        self.assertEqual(move.move_line_ids.lot_id, scanned_lot)
+        self.assertEqual(sum(move.move_line_ids.mapped('quantity')), 3)
+        self.assertEqual(move.product_uom_qty, 10)
+        self.assertEqual(move.state, 'partially_available')
+
+        action = picking.button_validate()
+        self.assertEqual(action['res_model'], 'stock.backorder.confirmation')
+        wizard = self.env['stock.backorder.confirmation'].with_context(
+            action['context'],
+        ).create({'pick_ids': [Command.set(picking.ids)]})
+        wizard.process()
+
+        backorder = picking.backorder_ids
+        self.assertTrue(backorder)
+        backorder_move = backorder.move_ids
+        self.assertEqual(backorder_move.preferred_lot_id, scanned_lot)
+        self.assertFalse(backorder_move.move_line_ids.filtered(
+            lambda line: line.lot_id != scanned_lot
         ))
 
     def test_non_pos_user_cannot_resolve_lot(self):

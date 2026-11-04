@@ -35,3 +35,10 @@
 - Reproduction: confirmed order `S00002` stored `FULLFLOW-LOT-PRODUCT-000002` (plus the Enter newline) as its description, with no product selected. The matching Lot name in the same database was `FFL-POS-FULLFLOW-LOT-PRODUCT-000002`.
 - Change: if no exact Lot name or Smart Lot barcode exists, allow a suffix match of at least 12 characters, scoped to accessible companies and accepted only when it resolves to one product. Ambiguous matches still fail closed.
 - Validation: full module suite passed (37 tests, zero failures/errors). Browser simulation of the exact string stored on `S00002` selected `FULL FLOW LOT SCAN TEST` and populated its configured price and tax.
+
+## 2026-11-04 — Carry scanned Sales Lot into delivery reservation
+
+- Request: when an operator scans a Lot on a Sales Order, reserve that same Lot for its delivery; if it is short, use its available quantity and backorder the remainder.
+- Evidence: Odoo 20 core `stock.move._action_assign`, `lot_ids` inverse, and `stock.quant` reservation APIs were inspected. The prior Sales scan resolved only the product, allowing normal FIFO reservation to pick a different Lot.
+- Change: Sales scan now returns the exact accessible Lot alongside the saleable product, persists it on the Sales Order Line, and overrides only the stock reservation step for those linked moves. Standard unscanned orders keep Odoo's normal removal strategy. For a scanned Lot shortage, other Lots are not substituted.
+- Validation: full addon suite passed on local Odoo 20 (39 tests, zero failures/errors), including full and partial Lot reservation/backorder cases. Browser flow scanned `FULLFLOW-LOT-PRODUCT-000002`, created `S00005`, and showed 10 units from Lot `FFL-POS-FULLFLOW-LOT-PRODUCT-000002` on `WH/OUT/00003`; the transfer was validated. Database confirms the transfer is Done and its 10-unit move line has Lot id 86. This is local test-database evidence; no physical scanner was used.

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="sale_order_form_preferred_smart_lot" model="ir.ui.view">
+        <field name="name">sale.order.form.preferred.smart.lot</field>
+        <field name="model">sale.order</field>
+        <field name="inherit_id" ref="sale.view_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='order_line']/form/field[@name='sequence']" position="after">
+                <field name="preferred_lot_id" invisible="1"/>
+            </xpath>
+            <xpath expr="//list[@name='sol_list']/column[@name='product_and_description']" position="after">
+                <field name="preferred_lot_id"
+                       string="Delivery Lot"
+                       optional="hide"
+                       domain="[('product_id', '=', product_id)]"
+                       readonly="state != 'draft'"/>
+            </xpath>
+            <xpath expr="//field[@name='order_line']/kanban/field[@name='product_template_id']" position="after">
+                <field name="preferred_lot_id" column_invisible="1"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

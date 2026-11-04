@@ -3,10 +3,10 @@ from odoo.fields import Domain
 from odoo.exceptions import UserError
 
 
-def _products_for_lot_scan(env, scanned_code):
-    """Find a product from a Lot name/barcode, including a unique suffix."""
+def _lots_for_scan(env, scanned_code):
+    """Find accessible Lots by exact code, then by a long unique suffix."""
     if not scanned_code:
-        return env['product.product']
+        return env['stock.lot']
     company_domain = (
         Domain('company_id', '=', False)
         | Domain('company_id', 'in', env.companies.ids)
@@ -31,7 +31,13 @@ def _products_for_lot_scan(env, scanned_code):
         )
         lots = Lot.search(suffix_domain & company_domain, limit=101)
     if len(lots) > 100:
-        return env['product.product']
+        return env['stock.lot']
+    return lots
+
+
+def _products_for_lot_scan(env, scanned_code):
+    """Resolve Lots to one unambiguous product for standard search widgets."""
+    lots = _lots_for_scan(env, scanned_code)
     products = lots.product_id
     # Lot names may be reused for different products. Do not guess which one
     # the operator meant; multiple matching Lots for one product are safe.
@@ -138,6 +144,28 @@ class ProductProduct(models.Model):
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
+
+    @api.model
+    def resolve_sale_lot_scan(self, scanned_code):
+        """Return the saleable product and exact Lot selected by a scan."""
+        lots = _lots_for_scan(self.env, scanned_code)
+        if len(lots) != 1:
+            return False
+        lot = lots[0]
+        product = lot.product_id
+        if not product.sale_ok or product.tracking not in ('lot', 'serial'):
+            return False
+        template = self.search([
+            ('id', '=', product.product_tmpl_id.id),
+            ('sale_ok', '=', True),
+        ], limit=1)
+        if not template:
+            return False
+        return {
+            'id': template.id,
+            'display_name': template.display_name,
+            'lot_id': lot.id,
+        }
 
     @api.model
     def name_search(self, name='', domain=None, operator='ilike', limit=100):
