@@ -29,3 +29,9 @@
 - Reproduction: existing quotation `S00001` contained `FFL-POS-FULLFLOW-LOT-PRODUCT-000002` as plain description text. In the local database, that value was `stock.lot.name`; its distinct `smart_barcode` ended in `000075`.
 - Change: Sales and product name search now resolve either exact `stock.lot.name` or `stock.lot.smart_barcode`. If one scanned name matches different products, lookup returns no product instead of guessing.
 - Validation: full module suite passed (37 tests, zero failures/errors). Browser scan simulation of the exact failing value `FFL-POS-FULLFLOW-LOT-PRODUCT-000002` selected `FULL FLOW LOT SCAN TEST`; the displayed line populated its configured price and tax.
+
+## 2026-11-04 — Match scanner output with a missing leading prefix
+
+- Reproduction: confirmed order `S00002` stored `FULLFLOW-LOT-PRODUCT-000002` (plus the Enter newline) as its description, with no product selected. The matching Lot name in the same database was `FFL-POS-FULLFLOW-LOT-PRODUCT-000002`.
+- Change: if no exact Lot name or Smart Lot barcode exists, allow a suffix match of at least 12 characters, scoped to accessible companies and accepted only when it resolves to one product. Ambiguous matches still fail closed.
+- Validation: full module suite passed (37 tests, zero failures/errors). Browser simulation of the exact string stored on `S00002` selected `FULL FLOW LOT SCAN TEST` and populated its configured price and tax.

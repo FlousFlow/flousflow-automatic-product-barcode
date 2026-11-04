@@ -4,7 +4,7 @@ from odoo.exceptions import UserError
 
 
 def _products_for_lot_scan(env, scanned_code):
-    """Find products for a Smart Lot barcode or the Lot/Serial name."""
+    """Find a product from a Lot name/barcode, including a unique suffix."""
     if not scanned_code:
         return env['product.product']
     company_domain = (
@@ -15,9 +15,23 @@ def _products_for_lot_scan(env, scanned_code):
         Domain('smart_barcode', '=', scanned_code)
         | Domain('name', '=', scanned_code)
     )
-    lots = env['stock.lot'].sudo().search(
-        code_domain & company_domain, limit=100,
-    )
+    Lot = env['stock.lot'].sudo()
+    lots = Lot.search(code_domain & company_domain, limit=101)
+    if not lots and len(scanned_code) >= 12:
+        # Some scanners/labels omit a configured leading prefix. A long exact
+        # suffix is accepted only when it still identifies one product.
+        escaped_code = (
+            scanned_code.replace('\\', '\\\\')
+            .replace('%', '\\%')
+            .replace('_', '\\_')
+        )
+        suffix_domain = (
+            Domain('smart_barcode', '=like', f'%{escaped_code}')
+            | Domain('name', '=like', f'%{escaped_code}')
+        )
+        lots = Lot.search(suffix_domain & company_domain, limit=101)
+    if len(lots) > 100:
+        return env['product.product']
     products = lots.product_id
     # Lot names may be reused for different products. Do not guess which one
     # the operator meant; multiple matching Lots for one product are safe.

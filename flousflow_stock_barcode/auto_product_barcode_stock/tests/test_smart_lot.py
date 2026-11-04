@@ -100,7 +100,7 @@ class TestSmartLotBarcode(TransactionCase):
     def test_sales_product_search_resolves_smart_lot_barcode(self):
         product = self._product(name='Searchable Tracked Product')
         lot = self.Lot.create({
-            'name': 'BATCH-SALE-SEARCH',
+            'name': 'FFL-POS-FULLFLOW-LOT-PRODUCT-000002',
             'product_id': product.id,
             'company_id': self.company.id,
         })
@@ -130,6 +130,15 @@ class TestSmartLotBarcode(TransactionCase):
         )
         self.assertEqual(
             lot_name_result,
+            [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
+        )
+        truncated_lot_name_result = self.env['product.template'].name_search(
+            name='FULLFLOW-LOT-PRODUCT-000002',
+            domain=[('sale_ok', '=', True)],
+            operator='=',
+        )
+        self.assertEqual(
+            truncated_lot_name_result,
             [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
         )
 
