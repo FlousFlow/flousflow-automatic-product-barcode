@@ -123,6 +123,16 @@ class TestSmartLotBarcode(TransactionCase):
             [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
         )
 
+        lot_name_result = self.env['product.template'].name_search(
+            name=lot.name,
+            domain=[('sale_ok', '=', True)],
+            operator='=',
+        )
+        self.assertEqual(
+            lot_name_result,
+            [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
+        )
+
         excluded_result = self.Product.name_search(
             name=lot.smart_barcode,
             domain=[('id', '=', False)],
@@ -136,6 +146,18 @@ class TestSmartLotBarcode(TransactionCase):
             operator='ilike',
         )
         self.assertFalse(excluded_template_result)
+
+        other_product = self._product(name='Another Product With Same Lot Name')
+        self.Lot.create({
+            'name': lot.name,
+            'product_id': other_product.id,
+            'company_id': self.company.id,
+        })
+        self.assertFalse(self.env['product.template'].name_search(
+            name=lot.name,
+            domain=[('sale_ok', '=', True)],
+            operator='=',
+        ))
 
     def test_non_pos_user_cannot_resolve_lot(self):
         lot = self.Lot.create({

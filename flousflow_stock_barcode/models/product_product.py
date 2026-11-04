@@ -3,21 +3,39 @@ from odoo.fields import Domain
 from odoo.exceptions import UserError
 
 
+def _products_for_lot_scan(env, scanned_code):
+    """Find products for a Smart Lot barcode or the Lot/Serial name."""
+    if not scanned_code:
+        return env['product.product']
+    company_domain = (
+        Domain('company_id', '=', False)
+        | Domain('company_id', 'in', env.companies.ids)
+    )
+    code_domain = (
+        Domain('smart_barcode', '=', scanned_code)
+        | Domain('name', '=', scanned_code)
+    )
+    lots = env['stock.lot'].sudo().search(
+        code_domain & company_domain, limit=100,
+    )
+    products = lots.product_id
+    # Lot names may be reused for different products. Do not guess which one
+    # the operator meant; multiple matching Lots for one product are safe.
+    return products if len(products) == 1 else env['product.product']
+
+
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     @api.model
     def name_search(self, name='', domain=None, operator='ilike', limit=100):
-        """Resolve an exact Smart Lot barcode to its saleable product."""
+        """Resolve an exact Lot name or Smart Lot barcode to its product."""
         if name and operator in ('=', 'ilike', '=ilike', 'like', '=like'):
-            lots = self.env['stock.lot'].sudo().search([
-                ('smart_barcode', '=', name),
-                '|', ('company_id', '=', False), ('company_id', 'in', self.env.companies.ids),
-            ], limit=1)
-            if lots:
+            products_from_lot = _products_for_lot_scan(self.env, name)
+            if products_from_lot:
                 products = self.search(
                     Domain(domain or Domain.TRUE)
-                    & Domain('id', '=', lots.product_id.id)
+                    & Domain('id', '=', products_from_lot.id)
                     & Domain('sale_ok', '=', True),
                     limit=limit,
                 )
@@ -109,17 +127,13 @@ class ProductTemplate(models.Model):
 
     @api.model
     def name_search(self, name='', domain=None, operator='ilike', limit=100):
-        """Resolve a Smart Lot barcode in the Sales product-template picker."""
+        """Resolve a Lot name or Smart Lot barcode in the Sales picker."""
         if name and operator in ('=', 'ilike', '=ilike', 'like', '=like'):
-            lot = self.env['stock.lot'].sudo().search([
-                ('smart_barcode', '=', name),
-                '|', ('company_id', '=', False),
-                ('company_id', 'in', self.env.companies.ids),
-            ], limit=1)
-            if lot:
+            products_from_lot = _products_for_lot_scan(self.env, name)
+            if products_from_lot:
                 templates = self.search(
                     Domain(domain or Domain.TRUE)
-                    & Domain('id', '=', lot.product_id.product_tmpl_id.id)
+                    & Domain('id', '=', products_from_lot.product_tmpl_id.id)
                     & Domain('sale_ok', '=', True),
                     limit=limit,
                 )

@@ -23,3 +23,9 @@
 - Change: resolve Smart Lot codes in `product.template.name_search` and handle fast scanner input ending in Enter in the Sales label field. A valid scan selects the saleable product; a miss keeps normal description entry and gives a warning.
 - Scope: Sales quotations select the product while Odoo's stock delivery still assigns the actual Lot; POS resolution is unchanged.
 - Validation: the module test suite passed on local Odoo 20 (37 tests, zero failures/errors). Browser simulation scanned `FFL-POS-FULLFLOW-LOT-PRODUCT-000075`; the Sales line displayed `FULL FLOW LOT SCAN TEST` with its configured price. No browser errors/warnings were recorded. A hardware scanner was not used.
+
+## 2026-11-04 — Resolve Lot names scanned from the label
+
+- Reproduction: existing quotation `S00001` contained `FFL-POS-FULLFLOW-LOT-PRODUCT-000002` as plain description text. In the local database, that value was `stock.lot.name`; its distinct `smart_barcode` ended in `000075`.
+- Change: Sales and product name search now resolve either exact `stock.lot.name` or `stock.lot.smart_barcode`. If one scanned name matches different products, lookup returns no product instead of guessing.
+- Validation: full module suite passed (37 tests, zero failures/errors). Browser scan simulation of the exact failing value `FFL-POS-FULLFLOW-LOT-PRODUCT-000002` selected `FULL FLOW LOT SCAN TEST`; the displayed line populated its configured price and tax.
