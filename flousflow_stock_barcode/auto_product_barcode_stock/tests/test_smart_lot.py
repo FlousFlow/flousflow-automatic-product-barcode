@@ -97,6 +97,46 @@ class TestSmartLotBarcode(TransactionCase):
         self.assertEqual(result['name'], lot.name)
         self.assertEqual(result['product_id'], lot.product_id.id)
 
+    def test_sales_product_search_resolves_smart_lot_barcode(self):
+        product = self._product(name='Searchable Tracked Product')
+        lot = self.Lot.create({
+            'name': 'BATCH-SALE-SEARCH',
+            'product_id': product.id,
+            'company_id': self.company.id,
+        })
+
+        result = self.Product.name_search(
+            name=lot.smart_barcode,
+            domain=[('sale_ok', '=', True)],
+            operator='ilike',
+        )
+
+        self.assertEqual(result, [(product.id, product.display_name)])
+
+        template_result = self.env['product.template'].name_search(
+            name=lot.smart_barcode,
+            domain=[('sale_ok', '=', True)],
+            operator='ilike',
+        )
+        self.assertEqual(
+            template_result,
+            [(product.product_tmpl_id.id, product.product_tmpl_id.display_name)],
+        )
+
+        excluded_result = self.Product.name_search(
+            name=lot.smart_barcode,
+            domain=[('id', '=', False)],
+            operator='ilike',
+        )
+        self.assertFalse(excluded_result)
+
+        excluded_template_result = self.env['product.template'].name_search(
+            name=lot.smart_barcode,
+            domain=[('id', '=', False)],
+            operator='ilike',
+        )
+        self.assertFalse(excluded_template_result)
+
     def test_non_pos_user_cannot_resolve_lot(self):
         lot = self.Lot.create({
             'name': 'BATCH-NON-POS',

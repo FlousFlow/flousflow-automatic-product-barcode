@@ -1,9 +1,29 @@
 from odoo import _, api, models
+from odoo.fields import Domain
 from odoo.exceptions import UserError
 
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
+
+    @api.model
+    def name_search(self, name='', domain=None, operator='ilike', limit=100):
+        """Resolve an exact Smart Lot barcode to its saleable product."""
+        if name and operator in ('=', 'ilike', '=ilike', 'like', '=like'):
+            lots = self.env['stock.lot'].sudo().search([
+                ('smart_barcode', '=', name),
+                '|', ('company_id', '=', False), ('company_id', 'in', self.env.companies.ids),
+            ], limit=1)
+            if lots:
+                products = self.search(
+                    Domain(domain or Domain.TRUE)
+                    & Domain('id', '=', lots.product_id.id)
+                    & Domain('sale_ok', '=', True),
+                    limit=limit,
+                )
+                if products:
+                    return [(product.id, product.display_name) for product in products.sudo()]
+        return super().name_search(name=name, domain=domain, operator=operator, limit=limit)
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -82,3 +102,32 @@ class ProductProduct(models.Model):
                 'type': 'success' if total else 'info',
             },
         }
+
+
+class ProductTemplate(models.Model):
+    _inherit = 'product.template'
+
+    @api.model
+    def name_search(self, name='', domain=None, operator='ilike', limit=100):
+        """Resolve a Smart Lot barcode in the Sales product-template picker."""
+        if name and operator in ('=', 'ilike', '=ilike', 'like', '=like'):
+            lot = self.env['stock.lot'].sudo().search([
+                ('smart_barcode', '=', name),
+                '|', ('company_id', '=', False),
+                ('company_id', 'in', self.env.companies.ids),
+            ], limit=1)
+            if lot:
+                templates = self.search(
+                    Domain(domain or Domain.TRUE)
+                    & Domain('id', '=', lot.product_id.product_tmpl_id.id)
+                    & Domain('sale_ok', '=', True),
+                    limit=limit,
+                )
+                if templates:
+                    return [
+                        (template.id, template.display_name)
+                        for template in templates
+                    ]
+        return super().name_search(
+            name=name, domain=domain, operator=operator, limit=limit,
+        )

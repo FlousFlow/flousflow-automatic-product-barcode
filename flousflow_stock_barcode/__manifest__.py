@@ -39,7 +39,7 @@ generation, receipt redistribution, printing, and POS scanning.
     'author': 'Flous Flow',
     'website': 'https://flousflow.com',
     'license': 'LGPL-3',
-    'depends': ['product', 'stock', 'point_of_sale'],
+    'depends': ['product', 'stock', 'point_of_sale', 'sale'],
     'data': [
         'security/ir.access.csv',
         'auto_product_barcode_stock/security/ir.access.csv',
@@ -56,6 +56,9 @@ generation, receipt redistribution, printing, and POS scanning.
         'auto_product_barcode_stock/report/smart_lot_label_report.xml',
     ],
     'assets': {
+        'web.assets_backend': [
+            'flousflow_stock_barcode/static/src/sale/sale_label_smart_lot.js',
+        ],
         'point_of_sale._assets_pos': [
             'flousflow_stock_barcode/static/src/app/product_screen_smart_lot.js',
         ],

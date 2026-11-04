@@ -3,8 +3,9 @@
     <record id="paperformat_smart_lot_50x30" model="report.paperformat">
         <field name="name">Smart Lot 50x30 mm</field>
         <field name="format">custom</field><field name="page_width">50</field><field name="page_height">30</field>
-        <field name="orientation">Portrait</field><field name="margin_top">2</field><field name="margin_bottom">2</field>
-        <field name="margin_left">2</field><field name="margin_right">2</field><field name="dpi">203</field>
+        <!-- wkhtmltopdf reverses custom width/height when orientation is Landscape. -->
+        <field name="orientation">Portrait</field><field name="margin_top">1</field><field name="margin_bottom">1</field>
+        <field name="margin_left">1</field><field name="margin_right">1</field><field name="dpi">96</field>
     </record>
     <record id="action_smart_lot_label" model="ir.actions.report">
         <field name="name">Smart Lot Barcode Label</field>
@@ -19,14 +20,14 @@
         <t t-call="web.html_container">
             <t t-foreach="docs" t-as="lot">
                 <t t-foreach="range((data or {}).get('label_quantity', 1))" t-as="copy_no">
-                <div class="page" style="font-family: sans-serif; text-align: center; page-break-after: always;">
-                    <div style="font-size: 10px; font-weight: bold; overflow: hidden; white-space: nowrap;"><t t-esc="lot.product_id.display_name"/></div>
-                    <div style="font-size: 9px; margin-top: 2mm;">Lot: <t t-esc="lot.name"/></div>
-                    <div style="margin-top: 2mm;">
-                        <span t-field="lot.smart_barcode" t-options="{'widget': 'barcode', 'symbology': lot.smart_barcode_symbology, 'width': 220, 'height': 45}"/>
+                <div class="page" style="box-sizing: border-box; width: 48mm; height: 28mm; padding: 0; margin: 0; font-family: sans-serif; text-align: center; overflow: hidden;">
+                    <div style="font-size: 6pt; line-height: 1.1; font-weight: bold; overflow: hidden; white-space: nowrap;"><t t-out="lot.company_id.name or res_company.name"/></div>
+                    <div style="font-size: 8pt; line-height: 1.1; font-weight: bold; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"><t t-out="lot.product_id.display_name"/></div>
+                    <div style="font-size: 5pt; line-height: 1.05; margin-top: 0.5mm; max-height: 3.2mm; overflow: hidden; white-space: normal; overflow-wrap: anywhere;">Lot: <t t-out="lot.name"/></div>
+                    <div style="height: 14mm; margin-top: 0.5mm; overflow: hidden;">
+                        <span t-field="lot.smart_barcode" t-options="{'widget': 'barcode', 'symbology': lot.smart_barcode_symbology, 'width': 165, 'height': 48}"/>
                     </div>
-                    <div style="font-size: 8px;"><t t-esc="lot.smart_barcode"/></div>
-                    <div t-if="lot.expiration_date" style="font-size: 8px;">Expires: <t t-esc="lot.expiration_date"/></div>
+                    <div t-if="lot.expiration_date" style="font-size: 6pt; line-height: 1.1; margin-top: 0.5mm;">Expires: <span t-field="lot.expiration_date" t-options="{'widget': 'date'}"/></div>
                 </div>
                 </t>
             </t>

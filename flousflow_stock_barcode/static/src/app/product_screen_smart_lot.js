@@ -54,6 +54,9 @@ patch(ProductScreen.prototype, {
             this.notification.add(_t("The product for this Smart Lot is not available in this POS."), { type: "danger" });
             return true;
         }
+        if (!(await this.pos.canAddProductToCurrentOrder(product.product_tmpl_id))) {
+            return true;
+        }
         this.sound.play("beep");
         const line = await this.pos.addLineToCurrentOrder(
             { product_id: product, product_tmpl_id: product.product_tmpl_id },
